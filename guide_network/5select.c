@@ -1,52 +1,91 @@
-#include<sys/time.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-/* ... */
-#define max(A,B) ((A)>=(B)?(A):(B))
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
 
-int select(int n, fd_set *readfds, fd_set *writefds, 
-fd_set *exceptfds,struct timeval *timeout);
-FD_CLR(int fd,fd_set *set);
-FD_ISSET(int fd,fd_set *set);
-FD_SET(int fd,fd_set *set);
-FD_ZERO(fd_set *set);
+#define MAX(A, B) ((A) > (B) ? (A) : (B))
 
-int main(void)
-{
-int fd, newfd, afd=0;
-fd_set rfds;
-enum {idle,busy} state;
-intmaxfd,counter;
-/*...*/
-/*fd=socket(…);bind(fd,…);listen(fd,…);*/
-state=idle;
-while(1){FD_ZERO(&rfds);
-switch(state){
-caseidle:FD_SET(fd,&rfds);maxfd=fd; break;
-casebusy: FD_SET(fd,&rfds);FD_SET(afd,&rfds);maxfd=max(fd,afd); break;
-}//switch(state)
-counter=select(maxfd+1,&rfds,(fd_set*)NULL,(fd_set*)NULL,(struct timeval *)NULL);
-if(counter<=0)/*error*/exit(1);
-for(;counter;--counter) 
-switch(state){
-caseidle:if(FD_ISSET(fd,&rfds)){FD_CLR(fd,&rfds);
-addrlen=sizeof(addr);
-if((newfd=accept(fd,&addr,&addrlen))==-1)/*error*/exit(1);
-afd=newfd;state=busy;}
-break;
-casebusy: if(FD_ISSET(fd,&rfds)){FD_CLR(fd,&rfds);
-addrlen=sizeof(addr);
-if((newfd=accept(fd,&addr,&addrlen))==-1)/*error*/exit(1);
-/* ... write “busy\n” in newfd */
-close(newfd);}
-else if(FD_ISSET(afd,&rfds)){FD_CLR(afd,&rfds);
-if((n=read(afd,buffer,128))!=0)
-{if(n==-1)/*error*/exit(1);
-/* ... write buffer in afd */}
-else{close(afd);state=idle;}//connection closed by peer
+int main(void) {
+    int fd, newfd, afd = 0;
+    fd_set rfds;
+    enum { idle, busy } state;
+    int maxfd, counter;
+    struct sockaddr_in addr;
+    socklen_t addrlen;
+    char buffer[128];
+
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    // Configuração do socket omitida...
+    listen(fd, 5);
+    state = idle;
+    
+    while (1) {
+        FD_ZERO(&rfds);
+        switch (state) {
+            case idle:
+                FD_SET(fd, &rfds);
+                maxfd = fd;
+                break;
+            case busy:
+                FD_SET(fd, &rfds);
+                if (afd > 0) {
+                    FD_SET(afd, &rfds);
+                    maxfd = MAX(fd, afd);
+                } else {
+                    maxfd = fd;
+                }
+                break;
+        }
+        
+        counter = select(maxfd + 1, &rfds, NULL, NULL, NULL);
+        if (counter < 0) {
+            perror("select");
+            exit(1);
+        }
+        
+        for (; counter > 0; counter--) {
+            switch (state) {
+                case idle:
+                    if (FD_ISSET(fd, &rfds)) {
+                        FD_CLR(fd, &rfds);
+                        addrlen = sizeof(addr);
+                        afd = accept(fd, (struct sockaddr*)&addr, &addrlen);
+                        if (newfd < 0) {
+                            perror("accept");
+                            exit(1);
+                        }
+                        state = busy;
+                    }
+                    break;
+                case busy:
+                    if (FD_ISSET(fd, &rfds)) {
+                        FD_CLR(fd, &rfds);
+                        addrlen = sizeof(addr);
+                        newfd = accept(fd, (struct sockaddr*)&addr, &addrlen);
+                        if (newfd < 0) {
+                            perror("accept");
+                            exit(1);
+                        }
+                        // Envia "busy\n" para o novo cliente
+                        write(newfd, "busy\n", 6);
+                        close(newfd);
+                    }
+                    if (afd > 0 && FD_ISSET(afd, &rfds)) {
+                        FD_CLR(afd, &rfds);
+                        int n = read(afd, buffer, 128);
+                        if (n <= 0) {
+                            close(afd);
+                            state = idle;
+                        } else {
+                            write(afd, buffer, n);
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+    return 0;
 }
-break;
-}//switch(state)
-}//while(1)
-/*close(fd);exit(0);*/
-}//main
