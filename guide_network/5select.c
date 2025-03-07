@@ -1,29 +1,41 @@
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 #include <string.h>
-#include <arpa/inet.h>
+#include <unistd.h>
+#include <sys/time.h>
 
-#define MAX(A, B) ((A) > (B) ? (A) : (B))
+#define max(A,B) ((A) >= (B) ? (A) : (B))
 
 int main(void) {
+    struct addrinfo hints, *res;
+    int errcode;
     int fd, newfd, afd = 0;
+    ssize_t n, nw;
+    struct sockaddr addr;
+    socklen_t addrlen;
+    char *ptr, buffer[128];
+
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) exit(1); // error
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET; // IPv4
+    hints.ai_socktype = SOCK_STREAM; // TCP socket
+    hints.ai_flags = AI_PASSIVE;
+
+    if ((errcode = getaddrinfo(NULL, "58001", &hints, &res)) != 0) exit(1); // error
+    if (bind(fd, res->ai_addr, res->ai_addrlen) == -1) exit(1); // error
+    if (listen(fd, 5) == -1) exit(1); // error
+
     fd_set rfds;
     enum { idle, busy } state;
     int maxfd, counter;
-    struct sockaddr_in addr;
-    socklen_t addrlen;
-    char buffer[128];
 
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    // Configuração do socket omitida...
-    listen(fd, 5);
     state = idle;
-    
     while (1) {
         FD_ZERO(&rfds);
+        
         switch (state) {
             case idle:
                 FD_SET(fd, &rfds);
@@ -31,61 +43,45 @@ int main(void) {
                 break;
             case busy:
                 FD_SET(fd, &rfds);
-                if (afd > 0) {
-                    FD_SET(afd, &rfds);
-                    maxfd = MAX(fd, afd);
-                } else {
-                    maxfd = fd;
-                }
+                FD_SET(afd, &rfds);
+                maxfd = max(fd, afd);
                 break;
         }
-        
-        counter = select(maxfd + 1, &rfds, NULL, NULL, NULL);
-        if (counter < 0) {
-            perror("select");
-            exit(1);
-        }
-        
-        for (; counter > 0; counter--) {
+
+        counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, (struct timeval *)NULL);
+        if (counter <= 0) exit(1); // error
+
+        for (; counter; --counter) {
             switch (state) {
                 case idle:
                     if (FD_ISSET(fd, &rfds)) {
                         FD_CLR(fd, &rfds);
                         addrlen = sizeof(addr);
-                        afd = accept(fd, (struct sockaddr*)&addr, &addrlen);
-                        if (newfd < 0) {
-                            perror("accept");
-                            exit(1);
-                        }
+                        if ((newfd = accept(fd, &addr, &addrlen)) == -1) exit(1); // error
+                        afd = newfd;
                         state = busy;
                     }
                     break;
+                
                 case busy:
                     if (FD_ISSET(fd, &rfds)) {
                         FD_CLR(fd, &rfds);
                         addrlen = sizeof(addr);
-                        newfd = accept(fd, (struct sockaddr*)&addr, &addrlen);
-                        if (newfd < 0) {
-                            perror("accept");
-                            exit(1);
-                        }
-                        // Envia "busy\n" para o novo cliente
-                        write(newfd, "busy\n", 6);
+                        if ((newfd = accept(fd, &addr, &addrlen)) == -1) exit(1); // error
+                        /* ... write "busy\n" in newfd */
                         close(newfd);
-                    }
-                    if (afd > 0 && FD_ISSET(afd, &rfds)) {
+                    } else if (FD_ISSET(afd, &rfds)) {
                         FD_CLR(afd, &rfds);
-                        int n = read(afd, buffer, 128);
-                        if (n <= 0) {
-                            close(afd);
-                            state = idle;
+                        if ((n = read(afd, buffer, 128)) != 0) {
+                            if (n == -1) exit(1); // error
+                            /* ... write buffer in afd */
                         } else {
-                            write(afd, buffer, n);
+                            close(afd);
+                            state = idle; // connection closed by peer
                         }
                     }
                     break;
             }
         }
     }
-    return 0;
 }
