@@ -68,16 +68,19 @@ int main(void) {
                         FD_CLR(fd, &rfds);
                         addrlen = sizeof(addr);
                         if ((newfd = accept(fd, &addr, &addrlen)) == -1) exit(1); // error
-                        /* ... write "busy\n" in newfd */
+                        write(newfd, "busy\n", 6);
+                        printf("Opa, tá busy");
                         close(newfd);
                     } else if (FD_ISSET(afd, &rfds)) {
                         FD_CLR(afd, &rfds);
                         if ((n = read(afd, buffer, 128)) != 0) {
                             if (n == -1) exit(1); // error
-                            /* ... write buffer in afd */
+                            write(afd, buffer, n);
+                            printf("Entrou aqui 1");
                         } else {
                             close(afd);
                             state = idle; // connection closed by peer
+                            printf("Entrou aqui 2");
                         }
                     }
                     break;
