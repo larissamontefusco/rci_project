@@ -5,7 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
-
+#include <stdio.h>
 #define max(A,B) ((A) >= (B) ? (A) : (B))
 
 int main(void) {
@@ -69,18 +69,15 @@ int main(void) {
                         addrlen = sizeof(addr);
                         if ((newfd = accept(fd, &addr, &addrlen)) == -1) exit(1); // error
                         write(newfd, "busy\n", 6);
-                        printf("Opa, tá busy");
                         close(newfd);
                     } else if (FD_ISSET(afd, &rfds)) {
                         FD_CLR(afd, &rfds);
                         if ((n = read(afd, buffer, 128)) != 0) {
                             if (n == -1) exit(1); // error
                             write(afd, buffer, n);
-                            printf("Entrou aqui 1");
                         } else {
                             close(afd);
                             state = idle; // connection closed by peer
-                            printf("Entrou aqui 2");
                         }
                     }
                     break;
