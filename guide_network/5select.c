@@ -12,10 +12,10 @@ int main(void) {
     struct addrinfo hints, *res;
     int errcode;
     int fd, newfd, afd = 0;
-    ssize_t n, nw;
+    ssize_t n;
     struct sockaddr addr;
     socklen_t addrlen;
-    char *ptr, buffer[128];
+    char buffer[128];
 
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) exit(1); // error
 
@@ -70,12 +70,14 @@ int main(void) {
                         if ((newfd = accept(fd, &addr, &addrlen)) == -1) exit(1); // error
                         write(newfd, "busy\n", 6);
                         close(newfd);
-                    } else if (FD_ISSET(afd, &rfds)) {
+                    } 
+                    else if (FD_ISSET(afd, &rfds)) {
                         FD_CLR(afd, &rfds);
                         if ((n = read(afd, buffer, 128)) != 0) {
                             if (n == -1) exit(1); // error
                             write(afd, buffer, n);
-                        } else {
+                        } 
+                        else {
                             close(afd);
                             state = idle; // connection closed by peer
                         }
