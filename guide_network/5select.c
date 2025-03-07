@@ -33,9 +33,8 @@ int main(void) {
     int maxfd, counter;
 
     state = idle;
+    FD_ZERO(&rfds);
     while (1) {
-        FD_ZERO(&rfds);
-        
         switch (state) {
             case idle:
                 FD_SET(fd, &rfds);
@@ -47,7 +46,8 @@ int main(void) {
                 maxfd = max(fd, afd);
                 break;
         }
-
+        
+        // Mask: rfds
         counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, (struct timeval *)NULL);
         if (counter <= 0) exit(1); // error
 
