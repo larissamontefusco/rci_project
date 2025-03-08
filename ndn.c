@@ -1,3 +1,14 @@
+/******************************************************************************
+ * Redes de Comunicação e Internet
+ * LEEC 24/25
+ *
+ * Projecto
+ * ndn.c
+ * 
+ * Por: Larissa da Silva Montefusco e Pedro Henrique Lucas Gouveia
+ *           
+ *****************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>

@@ -10,29 +10,28 @@
 #define tamanho_tcp 6
 #define n_max_internos 50
 #define n_max_obj 50
-#define n_max_internos 50
 #define tamanho_max_obj 100
 
-/* -_-_-_-_-_-_-_ ESTRUTURAS DE DADOS PARA OS NÓS -_-_-_-_-_-_-_ */
+/******************* ESTRUTURAS DE DADOS PARA OS NÓS *******************/
 
-/*------- Estrutura para o id de cada nó -------*/
+/******************* Estrutura para o id de cada nó *******************/
 typedef struct no
 {
-char ip[tamanho_ip];
-char tcp[tamanho_tcp];
+    char ip[tamanho_ip];   // Endereço IP do nó
+    char tcp[tamanho_tcp]; // Porta TCP do nó
 } ID_NO;
 
-/*------- Estrutura para a informação do nó da aplicação -------*/
+/****************** Estrutura para a informação do nó da aplicação ******************/
 typedef struct info_no
 {
-ID_NO id;
-ID_NO no_ext;
-ID_NO no_salv;
-ID_NO no_int[n_max_internos];
-char cache[n_max_obj][tamanho_max_obj];
+    ID_NO id;                         // Identificador do nó
+    ID_NO no_ext;                      // Identificador do vizinho externo
+    ID_NO no_salv;                     // Identificador do nó de salvaguarda
+    ID_NO no_int[n_max_internos];      // Lista de vizinhos internos
+    char cache[n_max_obj][tamanho_max_obj]; // Cache de objetos armazenados
 } INFO_NO;
 
-
+/****************** FUNÇÕES AUXILIARES ******************/
 
 int testa_numero_argumentos(int argc);
 int testa_formato_ip(char* ip);
