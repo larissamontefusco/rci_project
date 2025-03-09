@@ -18,6 +18,9 @@ int main(int argc, char** argv) {
     }
 
     INFO_NO no;
+    REDE rede_;
+    rede_.id = 500;
+    
     char regIP[tamanho_ip] = "193.136.138.142";
     char regUDP[tamanho_porto] = "59000";
 
@@ -118,10 +121,27 @@ int main(int argc, char** argv) {
                             if (n == -1) exit(1); // error
                             write(afd, buffer, n);
                             
-                            if (strncmp(buffer, "join", 4) == 0 || strncmp(buffer, "j ", 2) == 0) {
-                                printf("Comando Join\n");
-                                // Chamar a função correspondente
-                            }
+                            if (strncmp(buffer, "join ", 5) == 0 || strncmp(buffer, "j ", 2) == 0) {
+                                char *network = buffer + (buffer[0] == 'j' ? 2 : 5);  // Pega a parte depois de "join " ou "j "
+                        
+                                // Verifica se a rede contém apenas números e tem tamanho 3
+                                int valid = 1;
+                                for (int i = 0; i < 3; i++) {
+                                    if (!isdigit(network[i])) {
+                                        valid = 0;
+                                        break;
+                                    }
+                                }
+                                if (atoi(network) != rede_.id) {
+                                    printf("Erro: O valor da rede deve ser um número de três dígitos (000-999).\n");
+                                    valid = 0;
+                                }
+                                if (valid && strlen(network) == 3) {
+                                    join(&rede_, &no);
+                                } else {
+                                    printf("Erro: O valor da rede deve ser um número de três dígitos (000-999).\n");
+                                }
+                            } 
                             else if (strncmp(buffer, "create", 6) == 0 || strncmp(buffer, "c ", 2) == 0) {
                                 printf("Comando Create\n");
                                 //create();

@@ -35,6 +35,7 @@ typedef struct info_no
 
 typedef struct rede 
 {
+    int id;
     INFO_NO nos_rede[n_max_nos];
     int total_nos;
 } REDE;
