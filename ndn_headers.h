@@ -11,6 +11,7 @@
 #define n_max_internos 50
 #define n_max_obj 50
 #define tamanho_max_obj 100
+#define n_max_nos 100
 
 /******************* ESTRUTURAS DE DADOS PARA OS NÓS *******************/
 
@@ -31,10 +32,16 @@ typedef struct info_no
     char cache[n_max_obj][tamanho_max_obj]; // Cache de objetos armazenados
 } INFO_NO;
 
+
+typedef struct rede 
+{
+    INFO_NO nos_rede[n_max_nos];
+    int total_nos;
+} REDE;
 /****************** FUNÇÕES AUXILIARES ******************/
 
 int testa_formato_ip(char* ip);
-int join();
+int join(REDE *rede, INFO_NO *no);
 int direct_join();
-int create(char *name);
+int create(char *name, INFO_NO *no);
 

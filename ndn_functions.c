@@ -65,17 +65,43 @@
     return 0; // IP válido
 }
 
-int join(){
-    return 0;
+int join(REDE *rede, INFO_NO *no) {
+    // Verifica se ainda há espaço na rede
+    if (rede->total_nos >= n_max_nos) {
+        printf("Erro: Rede cheia! Não é possível adicionar mais nós.\n");
+        return 1;  // Falha ao adicionar
+    }
+
+    // Adiciona o nó à rede
+    rede->nos_rede[rede->total_nos] = *no;
+
+    // Incrementa o contador de nós
+    rede->total_nos++;
+
+    printf("Nó adicionado à rede: IP=%s, TCP=%s\n", no->id.ip, no->id.tcp);
+    return 0;  
 }
 
 int direct_join(){
+
     return 0;
 }
 
-int create(char *name){
-    /*Criação de um objeto com nome name. Os valores de name são representados por 
-    sequências alfanuméricas com um máximo de 100 carateres. Para simplificar, 
-    cria-se apenas o nome do objeto, omitindo-se o objeto propriamente dito. */
-    return 0;
+int create(char *name, INFO_NO *no) {
+    if (strlen(name) >= tamanho_max_obj) {
+        printf("Erro: Nome muito grande.\n");
+        return 1;
+    }
+
+    // Encontrar um espaço livre no cache
+    for (int i = 0; i < n_max_obj; i++) {
+        if (no->cache[i][0] == '\0') { // Se a posição estiver vazia
+            strcpy(no->cache[i], name);
+            printf("Objeto '%s' armazenado na posição %d do cache.\n", name, i);
+            return 0;
+        }
+    }
+
+    printf("Erro: Cache cheio.\n");
+    return 1; 
 }

@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
                             }
                             else if (strncmp(buffer, "create", 6) == 0 || strncmp(buffer, "c ", 2) == 0) {
                                 printf("Comando Create\n");
-                                // Chamar a função correspondente
+                                //create();
                             } 
                             else if (strncmp(buffer, "delete", 6) == 0 || strncmp(buffer, "dl ", 2) == 0) {
                                 printf("Comando delete\n");
