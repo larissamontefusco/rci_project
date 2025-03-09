@@ -1,15 +1,13 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c11
-OBJ = ndn_functions.o ndn.o
-EXEC = ndn_exec
+CFLAGS = -Wall -Wextra -g -DDEBUG
+OBJ = ndn.o ndn_functions.o
+DEPS = ndn_headers.h
 
-all: $(EXEC)
-
-%.o: %.c ndn_headers.h
+%.o: %.c $(DEPS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(EXEC): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(EXEC)
+ndn: $(OBJ)
+	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
-	rm -f *.o $(EXEC)
+	rm -f *.o ndn

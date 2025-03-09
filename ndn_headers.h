@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #define tamanho_ip 16
-#define tamanho_tcp 6
+#define tamanho_porto 6
 #define n_max_internos 50
 #define n_max_obj 50
 #define tamanho_max_obj 100
@@ -18,7 +18,7 @@
 typedef struct no
 {
     char ip[tamanho_ip];   // Endereço IP do nó
-    char tcp[tamanho_tcp]; // Porta TCP do nó
+    char tcp[tamanho_porto]; // Porta TCP do nó
 } ID_NO;
 
 /****************** Estrutura para a informação do nó da aplicação ******************/
