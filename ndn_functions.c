@@ -64,3 +64,18 @@
 
     return 0; // IP válido
 }
+
+int join(){
+    return 0;
+}
+
+int direct_join(){
+    return 0;
+}
+
+int create(char *name){
+    /*Criação de um objeto com nome name. Os valores de name são representados por 
+    sequências alfanuméricas com um máximo de 100 carateres. Para simplificar, 
+    cria-se apenas o nome do objeto, omitindo-se o objeto propriamente dito. */
+    return 0;
+}

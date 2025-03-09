@@ -34,3 +34,7 @@ typedef struct info_no
 /****************** FUNÇÕES AUXILIARES ******************/
 
 int testa_formato_ip(char* ip);
+int join();
+int direct_join();
+int create(char *name);
+
