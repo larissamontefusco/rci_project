@@ -1,13 +1,3 @@
-/******************************************************************************
- * Redes de Comunicação e Internet
- * LEEC 24/25
- *
- * Projecto
- * ndn.c
- * 
- * Por: Larissa da Silva Montefusco e Pedro Henrique Lucas Gouveia
- *           
- *****************************************************************************/
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,32 +12,44 @@
 #include "ndn_headers.h"
 #define max(A,B) ((A) >= (B) ? (A) : (B))
 
-int main(int argc, char** argv)
-{   
-    
-    INFO_NO no;
-    char regIP[tamanho_ip]="193.136.138.142", regUDP[tamanho_porto]="59000";
-    int error = testa_formato_ip(argv[2]);
-    if (error){
-        return 0;
+int main(int argc, char** argv) {   
+    if (argc != 4 && argc != 6) {
+        return 1;
     }
+
+    INFO_NO no;
+    char regIP[tamanho_ip] = "193.136.138.142";
+    char regUDP[tamanho_porto] = "59000";
+
+    int error = testa_formato_ip(argv[2]);
+    error = testa_formato_ip(argv[4]);
+
+    printf("Error = %d\n", error); // Confirma que error está sendo calculado
+
+    if (error) {
+        printf("Formato de IP inválido!\n");
+        return 1;
+    }
+
+    printf("IP válido!\n");
     switch (argc)
     {   
         case 4 : // regista o id do nó
                 strcpy(no.id.ip, argv[2]);
                 strcpy(no.id.tcp, argv[3]);
+                printf("Case 4\n");
                 break;
         case 6 : //regista regIP e regUDP
                 strcpy(no.id.ip, argv[2]);
                 strcpy(no.id.tcp, argv[3]);
                 strcpy(regIP, argv[4]);
                 strcpy(regUDP, argv[5]);
+                printf("Case 6\n");
                 break;
         default :   
                 printf("Erro na invocação da aplicação");
                 exit(0);
     }
-    
     struct addrinfo hints, *res;
     int errcode;
     int fd, newfd, afd = 0;
@@ -55,7 +57,6 @@ int main(int argc, char** argv)
     struct sockaddr addr;
     socklen_t addrlen;
     char buffer[128];
-
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) exit(1); // error
 
     memset(&hints, 0, sizeof hints);
@@ -73,6 +74,7 @@ int main(int argc, char** argv)
 
     state = idle;
     FD_ZERO(&rfds);
+    
     while (1) {
         switch (state) {
             case idle:
@@ -86,7 +88,6 @@ int main(int argc, char** argv)
                 break;
         }
         
-        // Mask: rfds
         counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, (struct timeval *)NULL);
         if (counter <= 0) exit(1); // error
 
@@ -126,5 +127,4 @@ int main(int argc, char** argv)
         }
     }
     return 0;
-
 }

@@ -33,6 +33,4 @@ typedef struct info_no
 
 /****************** FUNÇÕES AUXILIARES ******************/
 
-int testa_numero_argumentos(int argc);
 int testa_formato_ip(char* ip);
-int deteta_erro_invocacao(int argc, char** argv);
