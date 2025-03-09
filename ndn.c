@@ -114,8 +114,46 @@ int main(int argc, char** argv) {
                     else if (FD_ISSET(afd, &rfds)) {
                         FD_CLR(afd, &rfds);
                         if ((n = read(afd, buffer, 128)) != 0) {
+                            
                             if (n == -1) exit(1); // error
                             write(afd, buffer, n);
+                            
+                            if (strncmp(buffer, "join", 4) == 0 || strncmp(buffer, "j ", 2) == 0) {
+                                printf("Comando Join\n");
+                                // Chamar a função correspondente
+                            }
+                            else if (strncmp(buffer, "create", 6) == 0 || strncmp(buffer, "c ", 2) == 0) {
+                                printf("Comando Create\n");
+                                // Chamar a função correspondente
+                            } 
+                            else if (strncmp(buffer, "delete", 6) == 0 || strncmp(buffer, "dl ", 2) == 0) {
+                                printf("Comando delete\n");
+                                // Chamar a função correspondente
+                            } 
+                            else if (strncmp(buffer, "retrieve", 6) == 0 || strncmp(buffer, "r ", 2) == 0) {
+                                printf("Comando retrieve\n");
+                                // Chamar a função correspondente
+                            } 
+                            else if (strncmp(buffer, "show topology", 6) == 0 || strncmp(buffer, "st ", 2) == 0) {
+                                printf("show topology\n");
+                                // Chamar a função correspondente
+                            } 
+                            else if (strncmp(buffer, "show names", 6) == 0 || strncmp(buffer, "sn ", 2) == 0) {
+                                printf("show names\n");
+                                // Chamar a função correspondente
+                            } 
+                            else if (strncmp(buffer, "show interest table", 6) == 0 || strncmp(buffer, "si ", 2) == 0) {
+                                printf("Comando show interest table\n");
+                                // Chamar a função correspondente
+                            } 
+                            else if (strncmp(buffer, "leave", 6) == 0 || strncmp(buffer, "l ", 2) == 0) {
+                                printf("Comando Leave\n");
+                                // Chamar a função correspondente
+                            } 
+                            else if (strncmp(buffer, "exit", 6) == 0 || strncmp(buffer, "x ", 2) == 0) {
+                                printf("Comando Exit\n");
+                                // Chamar a função correspondente
+                            } 
                         } 
                         else {
                             close(afd);
