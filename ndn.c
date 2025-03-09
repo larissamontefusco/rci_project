@@ -24,11 +24,14 @@
 
 int main(int argc, char** argv)
 {   
-    int i = deteta_erro_invocacao(argc, argv);
+    
     INFO_NO no;
     char regIP[tamanho_ip]="193.136.138.142", regUDP[tamanho_porto]="59000";
-    
-    switch (i)
+    int error = testa_formato_ip(argv[2]);
+    if (error){
+        return 0;
+    }
+    switch (argc)
     {   
         case 4 : // regista o id do nó
                 strcpy(no.id.ip, argv[2]);
