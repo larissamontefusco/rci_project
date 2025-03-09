@@ -17,32 +17,41 @@
  * @return int Retorna true (1) se for válido, false (0) caso contrário.
  */
 
- int testa_formato_ip(char* ip) {
-    int octetos = 0;  // Contador de octetos (partes do IP separados por ponto)
+int testa_formato_ip(char* ip) {
+    if (ip == NULL) {
+        return 1; // NULL não é um IP válido
+    }
+
+    int octetos = 1;  // Contador de octetos (partes do IP)
     int digit_count = 0;  // Contador de dígitos dentro de cada octeto
+    int num = 0; // Armazena o valor do octeto
 
     for (int i = 0; ip[i] != '\0'; i++) {
         if (isdigit(ip[i])) {
-            digit_count++;  // Conta os dígitos
+            num = num * 10 + (ip[i] - '0');  // Constrói o número do octeto
+            digit_count++;  
+
+            if (num > 255) {
+                return 1; // Número do octeto maior que 255
+            }
         } 
         else if (ip[i] == '.') {
-            octetos++;  // Conta os pontos (separadores de octetos)
-            if (digit_count < 1 || digit_count > 3) {
-                return 1;  
+            if (digit_count == 0 || digit_count > 3) {
+                return 1; // Octeto inválido (vazio ou com mais de 3 dígitos)
             }
-            digit_count = 0;  // Reinicia o contador de dígitos para o próximo octeto
+            octetos++;  
+            digit_count = 0;  
+            num = 0;
         } 
         else {
-#if DEBUG
-        printf("\nCaractere inválido encontrado");
-#endif
-            return 1;  // Se encontrar caractere inválido
+            return 1;  // Caractere inválido
         }
     }
-    // O último octeto deve ter de 1 a 3 dígitos
-    if (digit_count < 1 || digit_count > 3) {
-        return 1;  // Se o último octeto não tiver entre 1 e 3 dígitos
+
+    // O último octeto deve ser válido e o IP deve ter exatamente 3 pontos
+    if (digit_count == 0 || digit_count > 3 || octetos != 4) {
+        return 1;
     }
 
-    return 0;
+    return 0; // IP válido
 }
