@@ -10,7 +10,7 @@
 
 #include "ndn_headers.h"
 
-/**
+/** int testa_formato_ip
  * @brief Verifica se uma string está no formato correto de endereço IP (X.X.X.X).
  * X é um número entre 0 e 255.
  * @param ip String contendo o IP a ser validado.
@@ -59,25 +59,13 @@
     return 0; // IP válido
 }
 
-int join(REDE *rede, INFO_NO *no) {
-    // Verifica se ainda há espaço na rede
-    if (rede->total_nos >= n_max_nos) {
-        printf("Erro: Rede cheia! Não é possível adicionar mais nós.\n");
-        return 1;  // Falha ao adicionar
-    }
-
-    // Adiciona o nó à rede
-    rede->nos_rede[rede->total_nos] = *no;
-
-    // Incrementa o contador de nós
-    rede->total_nos++;
-
-    printf("Nó adicionado à rede: IP=%s, TCP=%s\n", no->id.ip, no->id.tcp);
+int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP) {
+    // Isso aqui é UDP
     return 0;  
 }
 
-int direct_join(){
-
+int direct_join(REDE *rede, INFO_NO *no){
+    // Isso aqui como já é local, é necessário a estrutura de rede
     return 0;
 }
 

@@ -122,29 +122,13 @@ int main(int argc, char** argv) {
                             if (strncmp(buffer, "join ", 5) == 0) {
                                 char *network = buffer + 5;
                                 printf("network = %s\n", network);
-                                // Verifica se a rede contém apenas números e tem tamanho 3
-                                int valid = 1;
-                                if (strcmp(network, rede_.id) != 0)  {
-                                    printf("Erro: O valor da rede é sempre %s.\n", rede_.id);
-                                    valid = 0;
-                                }
-                                if (valid) {
-                                    join(&rede_, &no);
-                                } 
-                            } else if (strncmp(buffer, "j ", 2) == 0) {
+                                //join();
+                            }
+                            else if (strncmp(buffer, "j ", 2) == 0) {
                                 char *network = buffer + 2;
                                 printf("network = %s\n", network);
-                                // Verifica se a rede contém apenas números e tem tamanho 3
-                                int valid = 1;
-                                if (strcmp(network, rede_.id) != 0)  {
-                                    printf("Erro: O valor da rede é sempre %s.\n", rede_.id);
-                                    valid = 0;
-                                }
-                                if (valid) {
-                                    join(&rede_, &no);
-                                } 
+                                //join();  
                             }
-                            
                             else if (strncmp(buffer, "create ", 7) == 0 || strncmp(buffer, "c ", 2) == 0) {
                                 printf("Comando Create\n");
                                 char *name = buffer + (buffer[0] == 'c' ? 2 : 7);  // Pega a parte depois de "create " ou "c "

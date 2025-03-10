@@ -42,7 +42,7 @@ typedef struct rede
 /****************** FUNÇÕES AUXILIARES ******************/
 
 int testa_formato_ip(char* ip);
-int join(REDE *rede, INFO_NO *no);
-int direct_join();
+int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP);
+int direct_join(REDE *rede, INFO_NO *no);
 int create(char *name, INFO_NO *no);
 
