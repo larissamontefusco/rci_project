@@ -82,8 +82,6 @@ int main(int argc, char** argv) {
         if ((newfd = accept(fd, &addr, &addrlen)) == -1) exit(1);
         
         while ((n = read(newfd, buffer, 128)) > 0) {
-            write(newfd, buffer, n);
-            
             if (strncmp(buffer, "join ", 5) == 0) {
                 char *network = buffer + 5;
                 printf("network = %s\n", network);
@@ -96,14 +94,38 @@ int main(int argc, char** argv) {
             else if (strncmp(buffer, "direct join ", 12) == 0) {
                 char *network = buffer + 12;
                 printf("network = %s\n", network);
+                char *net = strtok(network, " ");
+                char *connectIP = strtok(NULL, " ");
+                char *connectTCP = strtok(NULL, " ");
+
+                // Exibindo os valores extraídos
+                if (net) printf("Network: %s\n", net);
+                if (connectIP) printf("IP: %s\n", connectIP);
+                if (connectTCP) printf("Porta: %s\n", connectTCP);
                 //direct_join();
             } else if (strncmp(buffer, "dj ", 3) == 0) {
                 char *network = buffer + 3;
                 printf("network = %s\n", network);
+                // Pegando a primeira parte (network)
+                char *net = strtok(network, " ");
+                char *connectIP = strtok(NULL, " ");
+                char *connectTCP = strtok(NULL, " ");
+
+                // Exibindo os valores extraídos
+                if (net) printf("Network: %s\n", net);
+                if (connectIP) printf("IP: %s\n", connectIP);
+                if (connectTCP) printf("Porta: %s\n", connectTCP);
+
                 //direct_join();
-            } else if (strncmp(buffer, "create ", 7) == 0 || strncmp(buffer, "c ", 2) == 0) {
+            } 
+            else if (strncmp(buffer, "create ", 7) == 0 ) {
                 printf("Comando Create\n");
-                char *name = buffer + (buffer[0] == 'c' ? 2 : 7);
+                char *name = buffer + 7;
+                create(name, &no);
+            }
+            else if (strncmp(buffer, "c ", 2) == 0) {
+                printf("Comando Create\n");
+                char *name =  buffer + 2;
                 create(name, &no);
             } else if (strncmp(buffer, "delete", 6) == 0 || strncmp(buffer, "dl", 3) == 0) {
                 printf("Comando delete\n");
