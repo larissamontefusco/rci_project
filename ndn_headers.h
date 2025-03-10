@@ -44,6 +44,6 @@ typedef struct rede
 int testa_formato_ip(char* ip);
 int testa_formato_porto(char *porto);
 int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP);
-int direct_join(REDE *rede, INFO_NO *no);
+int direct_join(REDE *rede, INFO_NO *no, char *connectIP, char *connectTCP);
 int create(char *name, INFO_NO *no);
 

@@ -88,10 +88,25 @@ int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP) {
     return 0;  
 }
 
-int direct_join(REDE *rede, INFO_NO *no){
-    // Isso aqui como já é local, é necessário a estrutura de rede
-    return 0;
+int direct_join(REDE *rede, INFO_NO *no, char *connectIP, char *connectTCP) {
+    // Caso especial: Se connectIP for "0.0.0.0", cria a rede com apenas o nó
+    if (strcmp(connectIP, "0.0.0.0") == 0) {
+        rede->total_nos = 1;
+        rede->nos_rede[0] = *no;  // Adiciona o nó à rede
+        return 0; 
+    }
+
+    // Percorre a lista de nós na rede para encontrar um nó com o mesmo IP e porta TCP
+    for (int i = 0; i < rede->total_nos; i++) {
+        if (strcmp(rede->nos_rede[i].id.ip, connectIP) == 0 && 
+            strcmp(rede->nos_rede[i].id.tcp, connectTCP) == 0) {
+            return i; // Retorna o índice do nó encontrado
+        }
+    }
+
+    return -1; // Nó não encontrado
 }
+
 
 int create(char *name, INFO_NO *no) {
     if (strlen(name) >= tamanho_max_obj) {

@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
         
         while ((n = read(newfd, buffer, 128)) > 0) {
             write(newfd, buffer, n);
-            // JOIN:
+            
             if (strncmp(buffer, "join ", 5) == 0) {
                 char *network = buffer + 5;
                 printf("network = %s\n", network);
@@ -92,6 +92,15 @@ int main(int argc, char** argv) {
                 char *network = buffer + 2;
                 printf("network = %s\n", network);
                 //join();
+            } 
+            else if (strncmp(buffer, "direct join ", 12) == 0) {
+                char *network = buffer + 12;
+                printf("network = %s\n", network);
+                //direct_join();
+            } else if (strncmp(buffer, "dj ", 3) == 0) {
+                char *network = buffer + 3;
+                printf("network = %s\n", network);
+                //direct_join();
             } else if (strncmp(buffer, "create ", 7) == 0 || strncmp(buffer, "c ", 2) == 0) {
                 printf("Comando Create\n");
                 char *name = buffer + (buffer[0] == 'c' ? 2 : 7);
