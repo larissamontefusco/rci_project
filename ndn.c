@@ -34,7 +34,6 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    printf("IP válido!\n");
     switch (argc)
     {   
         case 4 : // regista o id do nó
@@ -133,14 +132,15 @@ int main(int argc, char** argv) {
                                     }
                                 }
                                 if (atoi(network) != rede_.id) {
-                                    printf("Erro: O valor da rede deve ser um número de três dígitos (000-999).\n");
+                                    printf("Erro: O valor da rede é sempre 500.\n");
                                     valid = 0;
                                 }
-                                if (valid && strlen(network) == 3) {
-                                    join(&rede_, &no);
-                                } else {
+                                if (strlen(network) == 3){
                                     printf("Erro: O valor da rede deve ser um número de três dígitos (000-999).\n");
                                 }
+                                if (valid) {
+                                    join(&rede_, &no);
+                                } 
                             } 
                             else if (strncmp(buffer, "create", 6) == 0 || strncmp(buffer, "c ", 2) == 0) {
                                 printf("Comando Create\n");

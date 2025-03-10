@@ -32,17 +32,13 @@
             digit_count++;  
 
             if (num > 255) {
-#if DEBUG
                 printf("\nNúmero do octeto maior que 255: %c", ip[i]);
-#endif
                 return 1;
             }
         } 
         else if (ip[i] == '.') {
             if (digit_count == 0 || digit_count > 3) {
-#if DEBUG
                 printf("\nOcteto inválido (vazio ou com mais de 3 dígitos): %c", ip[i]);
-#endif
                 return 1; 
             }
             octetos++;  
@@ -50,9 +46,7 @@
             num = 0;
         } 
         else {
-#if DEBUG
             printf("\nCaractere inválido encontrado: %c", ip[i]);
-#endif
             return 1;  
         }
     }
