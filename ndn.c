@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 
     INFO_NO no;
     REDE rede_;
-    rede_.id = 500;
+    strcpy(rede_.id, "020");
     
     char regIP[tamanho_ip] = "193.136.138.142";
     char regUDP[tamanho_porto] = "59000";
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     hints.ai_socktype = SOCK_STREAM; // TCP socket
     hints.ai_flags = AI_PASSIVE;
 
-    if ((errcode = getaddrinfo(NULL, "58001", &hints, &res)) != 0) exit(1); // error
+    if ((errcode = getaddrinfo(NULL, argv[3], &hints, &res)) != 0) exit(1); // error
     if (bind(fd, res->ai_addr, res->ai_addrlen) == -1) exit(1); // error
     if (listen(fd, 5) == -1) exit(1); // error
 
@@ -119,32 +119,36 @@ int main(int argc, char** argv) {
                             
                             if (n == -1) exit(1); // error
                             write(afd, buffer, n);
-                            
-                            if (strncmp(buffer, "join ", 5) == 0 || strncmp(buffer, "j ", 2) == 0) {
-                                char *network = buffer + (buffer[0] == 'j' ? 2 : 5);  // Pega a parte depois de "join " ou "j "
-                        
+                            if (strncmp(buffer, "join ", 5) == 0) {
+                                char *network = buffer + 5;
+                                printf("network = %s\n", network);
                                 // Verifica se a rede contém apenas números e tem tamanho 3
                                 int valid = 1;
-                                for (int i = 0; i < 3; i++) {
-                                    if (!isdigit(network[i])) {
-                                        valid = 0;
-                                        break;
-                                    }
-                                }
-                                if (atoi(network) != rede_.id) {
-                                    printf("Erro: O valor da rede é sempre 500.\n");
+                                if (strcmp(network, rede_.id) != 0)  {
+                                    printf("Erro: O valor da rede é sempre %s.\n", rede_.id);
                                     valid = 0;
-                                }
-                                if (strlen(network) == 3){
-                                    printf("Erro: O valor da rede deve ser um número de três dígitos (000-999).\n");
                                 }
                                 if (valid) {
                                     join(&rede_, &no);
                                 } 
-                            } 
-                            else if (strncmp(buffer, "create", 6) == 0 || strncmp(buffer, "c ", 2) == 0) {
+                            } else if (strncmp(buffer, "j ", 2) == 0) {
+                                char *network = buffer + 2;
+                                printf("network = %s\n", network);
+                                // Verifica se a rede contém apenas números e tem tamanho 3
+                                int valid = 1;
+                                if (strcmp(network, rede_.id) != 0)  {
+                                    printf("Erro: O valor da rede é sempre %s.\n", rede_.id);
+                                    valid = 0;
+                                }
+                                if (valid) {
+                                    join(&rede_, &no);
+                                } 
+                            }
+                            
+                            else if (strncmp(buffer, "create ", 7) == 0 || strncmp(buffer, "c ", 2) == 0) {
                                 printf("Comando Create\n");
-                                //create();
+                                char *name = buffer + (buffer[0] == 'c' ? 2 : 7);  // Pega a parte depois de "create " ou "c "
+                                create(name, &no);
                             } 
                             else if (strncmp(buffer, "delete", 6) == 0 || strncmp(buffer, "dl ", 2) == 0) {
                                 printf("Comando delete\n");
