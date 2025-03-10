@@ -10,6 +10,30 @@
 
 #include "ndn_headers.h"
 
+
+
+int testa_formato_porto(char *porto) {
+    // Verifica se a string está vazia
+    if (porto == NULL || *porto == '\0') {
+        return 1; // Inválido
+    }
+
+    // Verifica se todos os caracteres são dígitos
+    for (int i = 0; porto[i] != '\0'; i++) {
+        if (!isdigit(porto[i])) {
+            return 1; // Inválido
+        }
+    }
+
+    // Converte para número e verifica intervalo
+    int numero = atoi(porto);
+    if (numero < 0 || numero > 65535) {
+        return 1; // Inválido
+    }
+
+    return 0; // Válido
+}
+
 /** int testa_formato_ip
  * @brief Verifica se uma string está no formato correto de endereço IP (X.X.X.X).
  * X é um número entre 0 e 255.
@@ -17,7 +41,7 @@
  * @return int Retorna true (1) se for válido, false (0) caso contrário.
  */
 
- int testa_formato_ip(char* ip) {
+int testa_formato_ip(char* ip) {
     if (ip == NULL) {
         return 1; // NULL não é um IP válido
     }
