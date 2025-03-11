@@ -114,6 +114,7 @@ int main(int argc, char** argv) {
 
     strcpy(no.id.ip, argv[2]);
     strcpy(no.id.tcp, argv[3]);
+    no.id.fd = -1;
     if (argc == 6) {
         strcpy(regIP, argv[4]);
         strcpy(regUDP, argv[5]);
