@@ -1,33 +1,105 @@
+#define _POSIX_C_SOURCE 200112L //remove os erros bruh
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdbool.h>
+#include <arpa/inet.h>
+#include <sys/time.h> 
 #include <ctype.h>
-
 #include "ndn_headers.h"
 
+#define ENTRY_msg 0
+#define SAFE_msg 1
+#define INTEREST_msg 2
+#define OBJECT_msg 3
+#define NOOBJECT_msg 4
 
+void f_msg(int fd, int type, char* name, char* tcp){
+    char* msg;
+    int length;
 
+    switch(type){
+        case ENTRY_msg:
+        case SAFE_msg:
+            length = snprintf(NULL, 0, "%d %s %s\n", type, name, tcp);
+            msg = malloc(length + 1);
+            sprintf(msg, "%d %s %s\n", type, name, tcp);
+            break;
+        case INTEREST_msg:
+        case OBJECT_msg:
+        case NOOBJECT_msg:
+            length = snprintf(NULL, 0, "%d %s\n", type, name);
+            msg = malloc(length + 1);
+            sprintf(msg, "%d %s\n", type, name);
+            break;
+        default:
+            return;
+    }
+
+    if (write(fd, msg, length) == -1) {
+        perror("write");
+    }
+
+    printf("Sent to FD %d: %s\n", fd, msg);
+    free(msg);
+}
+
+/*
+ * testa_formato_porto - Verifica se a string fornecida representa uma porta TCP válida.
+ *
+ * Parâmetros:
+ *   porto - String contendo o número da porta a ser validado.
+ *
+ * Retorno:
+ *   0 - Se a porta for válida (número entre 0 e 65535).
+ *   1 - Se a porta for inválida (não numérica, vazia ou fora do intervalo).
+ */
 int testa_formato_porto(char *porto) {
-    // Verifica se a string está vazia
     if (porto == NULL || *porto == '\0') {
         return 1; // Inválido
     }
 
-    // Verifica se todos os caracteres são dígitos
     for (int i = 0; porto[i] != '\0'; i++) {
         if (!isdigit(porto[i])) {
             return 1; // Inválido
         }
     }
 
-    // Converte para número e verifica intervalo
     int numero = atoi(porto);
     if (numero < 0 || numero > 65535) {
+        return 1; // Inválido
+    }
+
+    return 0; // Válido
+}
+
+/*
+ * testa_formato_net - Verifica se a string representa um identificador de rede válido (000-999).
+ *
+ * Parâmetros:
+ *   net - String contendo o identificador da rede.
+ *
+ * Retorno:
+ *   0 - Se for um identificador válido (formato "000" a "999").
+ *   1 - Se for inválido (não numérico, tamanho incorreto ou fora do intervalo).
+ */
+int testa_formato_net(char *net) {
+    if (net == NULL || strlen(net) != 3) {
+        return 1; // Inválido
+    }
+
+    for (int i = 0; i < 3; i++) {
+        if (!isdigit(net[i])) {
+            return 1; // Inválido
+        }
+    }
+
+    int numero = atoi(net);
+    if (numero < 0 || numero > 999) {
         return 1; // Inválido
     }
 
@@ -88,24 +160,55 @@ int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP) {
     return 0;  
 }
 
-int direct_join(REDE *rede, INFO_NO *no, char *connectIP, char *connectTCP) {
-    // Caso especial: Se connectIP for "0.0.0.0", cria a rede com apenas o nó
+int direct_join(REDE *rede, INFO_NO no, char *connectIP, 
+    char *connectTCP, fd_set master_fds, int max_fd) {
     if (strcmp(connectIP, "0.0.0.0") == 0) {
         rede->total_nos = 1;
-        rede->nos_rede[0] = *no;  // Adiciona o nó à rede
-        return 0; 
+        rede->nos_rede[0] = no;
+        return 1; 
     }
 
-    // Percorre a lista de nós na rede para encontrar um nó com o mesmo IP e porta TCP
-    for (int i = 0; i < rede->total_nos; i++) {
-        if (strcmp(rede->nos_rede[i].id.ip, connectIP) == 0 && 
-            strcmp(rede->nos_rede[i].id.tcp, connectTCP) == 0) {
-            return i; // Retorna o índice do nó encontrado
-        }
+    if (no.id.fd != -1) {
+        printf("Already connected to a server. Aborting direct join.\n");
+        return 1;
     }
 
-    return -1; // Nó não encontrado
+    int errcode, n;
+    struct addrinfo hints, *res;
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd == -1) {
+        perror("socket");
+        exit(1);
+    }
+    
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    
+    errcode = getaddrinfo(connectIP, connectTCP, &hints, &res);
+    if (errcode != 0) {
+        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(errcode));
+        return 1;
+    }
+    
+    n = connect(fd, res->ai_addr, res->ai_addrlen);
+    if (n == -1) {
+        perror("connect");
+        exit(1);
+        return 1;
+    }
+
+    printf("Connected to %s:%s on FD %d.\n", connectIP, connectTCP, fd);
+    //f_update_vz_ext(fd, connectIP, connectTCP);
+    printf("Updated external neighbour to %s:%s.\n", connectIP, connectTCP);
+
+    FD_SET(fd, &master_fds);
+    if (fd > max_fd) max_fd = fd;
+
+    f_msg(fd, ENTRY_msg, no.id.ip, no.id.tcp);
+    return 0; 
 }
+
 
 /*
  * Função: parse_buffer

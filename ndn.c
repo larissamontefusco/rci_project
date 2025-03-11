@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
     struct addrinfo hints, *res;
     int fd, new_fd, counter;
     fd_set master_fds, read_fds;
+    
     struct sockaddr addr;
     socklen_t addrlen;
     char buffer[TAMANHO_BUFFER];
@@ -106,12 +107,12 @@ int main(int argc, char** argv) {
                     int n = read(i, buffer, TAMANHO_BUFFER);
                     if (n <= 0) {    
                         if (n == 0) {
-                                printf("f_handle_disconnection(i)");
+                                printf("f_handle_disconnection(i) função, temos que fazer");
                             } else {
                                 perror("read");
                             }
                             close(i);
-                            FD_CLR(i, &master_fds);     // Remove closed connection from master set
+                            FD_CLR(i, &master_fds); 
                         } 
                     else {
                         processa_comandos(buffer, TAMANHO_BUFFER, &no);
