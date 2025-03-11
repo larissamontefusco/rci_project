@@ -51,7 +51,7 @@ void processa_comandos(char *buffer, int tamanho_buffer, INFO_NO *no) {
         printf("Network: %s\n", words[1]);
         printf("IP: %s\n", words[2]);
         printf("Porta: %s\n", words[3]);
-        //direct_join();
+        direct_join(words[1], *no, words[2], words[3], master_set, &max_fd);
     }
     else if (strcmp(words[0], "create") == 0 || strcmp(words[0], "c") == 0) {
         printf("Comando Create\n");

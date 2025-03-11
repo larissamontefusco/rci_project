@@ -198,8 +198,10 @@ void show_topology(INFO_NO no) {
 }
 
 
-int direct_join(char *rede_id, INFO_NO no, char *connectIP, 
-    char *connectTCP, fd_set *master_set, int *max_fd) {
+int direct_join(char *rede_id, INFO_NO no, char *connectIP, char *connectTCP, fd_set *master_set, int *max_fd) {
+    
+    printf("direct_join foi chamada com rede_id=%s, IP=%s, Port=%s\n", 
+        rede_id, connectIP, connectTCP);
 
     int error = testa_formato_rede(rede_id);
     error = testa_formato_ip(connectIP);
