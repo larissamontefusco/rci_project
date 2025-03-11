@@ -149,7 +149,19 @@ int main(int argc, char** argv) {
     FD_SET(STDIN_FILENO, &master_fds);
     max_fd = max(fd, STDIN_FILENO);
 
-    printf("Servidor ouvindo na porta %s...\n", no.id.tcp);
+    printf("========================================\n");
+    printf("  Servidor iniciado com sucesso! 🎉\n");
+    printf("  Ouvindo conexões na porta: %s\n", no.id.tcp);
+    printf("========================================\n\n");
+    
+    printf("📌 COMANDOS DISPONÍVEIS:\n");
+    printf("➡  direct join (dj) IP PORT  - Conectar a um nó diretamente\n");
+    printf("➡  show topology (st)        - Exibir a topologia da rede\n");
+    printf("➡  exit (x)                  - Sair do programa\n\n");
+    
+    printf("========================================\n");
+
+
     while (1) {
         
         read_fds = master_fds;

@@ -78,7 +78,7 @@ int testa_formato_porto(char *porto) {
 }
 
 /*
- * testa_formato_net - Verifica se a string representa um identificador de rede válido (000-999).
+ * testa_formato_rede - Verifica se a string representa um identificador de rede válido (000-999).
  *
  * Parâmetros:
  *   net - String contendo o identificador da rede.
@@ -87,7 +87,7 @@ int testa_formato_porto(char *porto) {
  *   0 - Se for um identificador válido (formato "000" a "999").
  *   1 - Se for inválido (não numérico, tamanho incorreto ou fora do intervalo).
  */
-int testa_formato_net(char *net) {
+int testa_formato_rede(char *net) {
     if (net == NULL || strlen(net) != 3) {
         return 1; // Inválido
     }

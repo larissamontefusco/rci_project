@@ -66,7 +66,7 @@ typedef struct rede {
 // Funções para teste de formato:
 int testa_formato_ip(char* ip);
 int testa_formato_porto(char *porto);
-int testa_formato_net(char *net);
+int testa_formato_rede(char *net);
 
 // Funções da NDN
 int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP);
