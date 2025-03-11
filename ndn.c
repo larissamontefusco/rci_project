@@ -159,6 +159,7 @@ int main(int argc, char** argv) {
     printf("📌 COMANDOS DISPONÍVEIS:\n");
     printf("➡  direct join (dj) NET IP PORT  - Conectar a um nó diretamente\n");
     printf("➡  show topology (st)        - Exibir a topologia da rede\n");
+    printf("➡  create (c) NAME          -  Criação de um objeto com nome NAME (tamanho máximo 100).\n\n");
     printf("➡  exit (x)                  - Sair do programa\n\n");
     
     printf("========================================\n");
