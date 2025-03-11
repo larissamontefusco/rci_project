@@ -160,8 +160,39 @@ int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP) {
     return 0;  
 }
 
+void show_topology(INFO_NO no) {
+
+    printf("========================================\n");
+    
+    if (no.id.fd != -1) {
+        printf("🔗 Vizinho Externo: %s:%s\n\n", no.no_ext.ip, no.no_ext.tcp);
+    } else {
+        printf("[INFO] Atualmente sem vizinho externo.\n\n");
+    }
+
+    if (no.no_salv.fd != -1) {
+        printf("🛡️  Vizinho de Salvaguarda: %s:%s\n\n", no.no_salv.ip, no.no_salv.tcp);
+    } else {
+        printf("[INFO] Atualmente sem vizinho de salvaguarda.\n\n");
+    }
+
+    /*if (head == NULL) {
+        printf("[INFO] Atualmente sem vizinhos internos.\n\n");
+    } else {  
+        printf("📡 Vizinhos Internos:\n");
+        while (head != NULL) {
+            printf("   ➜ %s:%s\n", head->ip, head->port);
+            head = head->next;
+        } 
+        printf("\n");
+    }*/
+
+    printf("========================================\n\n");
+}
+
+
 int direct_join(char *rede_id, INFO_NO no, char *connectIP, 
-    char *connectTCP, fd_set *master_set, int max_fd) {
+    char *connectTCP, fd_set *master_set, int *max_fd) {
 
     int error = testa_formato_rede(rede_id);
     error = testa_formato_ip(connectIP);

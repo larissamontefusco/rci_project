@@ -45,7 +45,7 @@ void processa_comandos(char *buffer, int tamanho_buffer, INFO_NO *no) {
         printf("Network: %s\n", words[2]);
         printf("IP: %s\n", words[3]);
         printf("Porta: %s\n", words[4]);
-        direct_join(words[2], *no, words[3], words[4], *master_set, max_fd);
+        direct_join(words[2], *no, words[3], words[4], master_set, &max_fd);
     } 
     else if(strcmp("dj", words[0]) == 0){
         printf("Network: %s\n", words[1]);
@@ -64,9 +64,11 @@ void processa_comandos(char *buffer, int tamanho_buffer, INFO_NO *no) {
         printf("Comando retrieve\n");
     }
     else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "topology") == 0) {
+        show_topology(*no);
         printf("show topology\n");
     }
     else if (strcmp(words[0], "st") == 0) {
+        show_topology(*no);
         printf("show topology\n");
     }
     else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "names") == 0) {
@@ -155,7 +157,7 @@ int main(int argc, char** argv) {
     printf("========================================\n\n");
     
     printf("📌 COMANDOS DISPONÍVEIS:\n");
-    printf("➡  direct join (dj) IP PORT  - Conectar a um nó diretamente\n");
+    printf("➡  direct join (dj) NET IP PORT  - Conectar a um nó diretamente\n");
     printf("➡  show topology (st)        - Exibir a topologia da rede\n");
     printf("➡  exit (x)                  - Sair do programa\n\n");
     

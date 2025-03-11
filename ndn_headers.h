@@ -71,6 +71,7 @@ int testa_formato_rede(char *net);
 // Funções da NDN
 int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP);
 int direct_join(char *rede_id, INFO_NO no, char *connectIP, 
-    char *connectTCP, fd_set master_fds, int max_fd);
+    char *connectPort, fd_set *fds, int *maxfd);
+void show_topology(INFO_NO no);
 int create(char *name, INFO_NO *no);
 void parse_buffer(char *buffer, int tamanho_buffer, char words[10][100]);
