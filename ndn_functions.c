@@ -48,6 +48,13 @@ void f_msg(int fd, int type, char* name, char* tcp){
     free(msg);
 }
 
+
+void f_update_vz_ext(int fd, char* ip, char* port, INFO_NO no){
+    no.id.fd = fd;
+    strcpy(no.id.ip,ip); 
+    strcpy(no.id.tcp,port); 
+}
+
 /*
  * testa_formato_porto - Verifica se a string fornecida representa uma porta TCP válida.
  *
@@ -237,11 +244,11 @@ int direct_join(char *rede_id, INFO_NO no, char *connectIP,
     }
 
     printf("Connected to %s:%s on FD %d.\n", connectIP, connectTCP, fd);
-    //f_update_vz_ext(fd, connectIP, connectTCP);
+    f_update_vz_ext(fd, connectIP, connectTCP, no);
     printf("Updated external neighbour to %s:%s.\n", connectIP, connectTCP);
 
     FD_SET(fd, master_set);
-    if (fd > max_fd) max_fd = fd;
+    if (fd > *max_fd) *max_fd = fd;
 
     f_msg(fd, ENTRY_msg, no.id.ip, no.id.tcp);
     return 0; 
