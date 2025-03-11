@@ -20,6 +20,7 @@ typedef struct no
 {
     char ip[tamanho_ip];   // Endereço IP do nó
     char tcp[tamanho_porto]; // Porta TCP do nó
+    int fd; //
 } ID_NO;
 
 /****************** Estrutura para a informação do nó da aplicação ******************/
@@ -46,4 +47,6 @@ int testa_formato_porto(char *porto);
 int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP);
 int direct_join(REDE *rede, INFO_NO *no, char *connectIP, char *connectTCP);
 int create(char *name, INFO_NO *no);
+void parse_buffer(char *buffer, int tamanho_buffer, char words[10][100]);
+void processa_comandos(char *buffer, int tamanho_buffer, INFO_NO *no);
 

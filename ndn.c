@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200112L
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,10 +9,12 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <sys/time.h>
+#include <arpa/inet.h>
 
 #include "ndn_headers.h"
 
 #define max(A,B) ((A) >= (B) ? (A) : (B))
+#define TAMANHO_BUFFER 128
 
 int main(int argc, char** argv) {   
     if (argc != 4 && argc != 6) {
@@ -28,43 +31,30 @@ int main(int argc, char** argv) {
     int error = testa_formato_ip(argv[2]);
     error = testa_formato_porto(argv[3]);
     
-    printf("Error = %d\n", error);
-
     if (error) {
         printf("Formato de inputs inválido!\n");
         return 1;
     }
 
-    switch (argc) {   
-        case 4:
-            strcpy(no.id.ip, argv[2]);
-            strcpy(no.id.tcp, argv[3]);
-            printf("Case 4\n");
-            break;
-        case 6:
-            strcpy(no.id.ip, argv[2]);
-            strcpy(no.id.tcp, argv[3]);
-            strcpy(regIP, argv[4]);
-            strcpy(regUDP, argv[5]);
-            error = testa_formato_ip(argv[4]);
-            error = testa_formato_porto(argv[5]);
-            if (error) {
-                printf("Formato de inputs inválido!\n");
-                return 1;
-            }
-            printf("Case 6\n");
-            break;
-        default:
-            printf("Erro na invocação da aplicação");
-            exit(0);
+    strcpy(no.id.ip, argv[2]);
+    strcpy(no.id.tcp, argv[3]);
+    if (argc == 6) {
+        strcpy(regIP, argv[4]);
+        strcpy(regUDP, argv[5]);
+        error = testa_formato_ip(argv[4]);
+        error = testa_formato_porto(argv[5]);
+        if (error) {
+            printf("Formato de inputs inválido!\n");
+            return 1;
+        }
     }
 
     struct addrinfo hints, *res;
-    int fd, newfd;
-    ssize_t n;
+    int fd, new_fd, counter;
+    fd_set master_fds, read_fds;
     struct sockaddr addr;
     socklen_t addrlen;
-    char buffer[128];
+    char buffer[TAMANHO_BUFFER];
     
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) exit(1);
     
@@ -73,77 +63,62 @@ int main(int argc, char** argv) {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    if (getaddrinfo(NULL, argv[3], &hints, &res) != 0) exit(1);
+    if (getaddrinfo(NULL, no.id.tcp, &hints, &res) != 0) exit(1);
     if (bind(fd, res->ai_addr, res->ai_addrlen) == -1) exit(1);
     if (listen(fd, 5) == -1) exit(1);
     
+    FD_ZERO(&master_fds);
+    FD_SET(fd, &master_fds);
+    FD_SET(STDIN_FILENO, &master_fds);
+    int max_fd = max(fd, STDIN_FILENO);
+
+    printf("Servidor ouvindo na porta %s...\n", no.id.tcp);
     while (1) {
-        addrlen = sizeof(addr);
-        if ((newfd = accept(fd, &addr, &addrlen)) == -1) exit(1);
         
-        while ((n = read(newfd, buffer, 128)) > 0) {
-            if (strncmp(buffer, "join ", 5) == 0) {
-                char *network = buffer + 5;
-                printf("network = %s\n", network);
-                //join();
-            } else if (strncmp(buffer, "j ", 2) == 0) {
-                char *network = buffer + 2;
-                printf("network = %s\n", network);
-                //join();
-            } 
-            else if (strncmp(buffer, "direct join ", 12) == 0) {
-                char *network = buffer + 12;
-                printf("network = %s\n", network);
-                char *net = strtok(network, " ");
-                char *connectIP = strtok(NULL, " ");
-                char *connectTCP = strtok(NULL, " ");
+        read_fds = master_fds;
+        
+                
+        counter = select(max_fd + 1, &read_fds, NULL, NULL, NULL);
+        if (counter == -1) {
+            perror("select");
+            exit(1);
+        }
 
-                // Exibindo os valores extraídos
-                if (net) printf("Network: %s\n", net);
-                if (connectIP) printf("IP: %s\n", connectIP);
-                if (connectTCP) printf("Porta: %s\n", connectTCP);
-                //direct_join();
-            } else if (strncmp(buffer, "dj ", 3) == 0) {
-                char *network = buffer + 3;
-                printf("network = %s\n", network);
-                // Pegando a primeira parte (network)
-                char *net = strtok(network, " ");
-                char *connectIP = strtok(NULL, " ");
-                char *connectTCP = strtok(NULL, " ");
+        for (int i = 0; i <= max_fd; i++) {
+            memset(buffer, 0, TAMANHO_BUFFER);  // Clear the buffer before reading new data 
 
-                // Exibindo os valores extraídos
-                if (net) printf("Network: %s\n", net);
-                if (connectIP) printf("IP: %s\n", connectIP);
-                if (connectTCP) printf("Porta: %s\n", connectTCP);
-
-                //direct_join();
-            } 
-            else if (strncmp(buffer, "create ", 7) == 0 ) {
-                printf("Comando Create\n");
-                char *name = buffer + 7;
-                create(name, &no);
-            }
-            else if (strncmp(buffer, "c ", 2) == 0) {
-                printf("Comando Create\n");
-                char *name =  buffer + 2;
-                create(name, &no);
-            } else if (strncmp(buffer, "delete", 6) == 0 || strncmp(buffer, "dl", 3) == 0) {
-                printf("Comando delete\n");
-            } else if (strncmp(buffer, "retrieve", 6) == 0 || strncmp(buffer, "r ", 2) == 0) {
-                printf("Comando retrieve\n");
-            } else if (strncmp(buffer, "show topology", 13) == 0 || strncmp(buffer, "st ", 3) == 0) {
-                printf("show topology\n");
-            } else if (strncmp(buffer, "show names", 10) == 0 || strncmp(buffer, "sn ", 3) == 0) {
-                printf("show names\n");
-            } else if (strncmp(buffer, "show interest table", 19) == 0 || strncmp(buffer, "si ", 3) == 0) {
-                printf("Comando show interest table\n");
-            } else if (strncmp(buffer, "leave", 5) == 0 || strncmp(buffer, "l ", 2) == 0) {
-                printf("Comando Leave\n");
-            } else if (strncmp(buffer, "exit", 4) == 0 || strncmp(buffer, "x ", 2) == 0) {
-                printf("Comando Exit\n");
+            if (FD_ISSET(i, &read_fds)) { 
+                if (i == fd) {              
+                    addrlen = sizeof addr;
+                    new_fd = accept(fd, &addr, &addrlen);
+                    if (new_fd == -1) {
+                        perror("accept");
+                    } else {
+                        FD_SET(new_fd, &master_fds);
+                        if (new_fd > max_fd) max_fd = new_fd;
+                    }
+                }
+                else if (i == STDIN_FILENO) {
+                    fgets(buffer, TAMANHO_BUFFER, stdin);
+                    processa_comandos(buffer, TAMANHO_BUFFER, &no);
+                } 
+                else {
+                    int n = read(i, buffer, TAMANHO_BUFFER);
+                    if (n <= 0) {    
+                        if (n == 0) {
+                                printf("f_handle_disconnection(i)");
+                            } else {
+                                perror("read");
+                            }
+                            close(i);
+                            FD_CLR(i, &master_fds);     // Remove closed connection from master set
+                        } 
+                    else {
+                        processa_comandos(buffer, TAMANHO_BUFFER, &no);
+                    }
+                }
             }
         }
-        close(newfd);
     }
     return 0;
 }
