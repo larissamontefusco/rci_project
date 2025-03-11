@@ -16,6 +16,80 @@
 #define max(A,B) ((A) >= (B) ? (A) : (B))
 #define TAMANHO_BUFFER 128
 
+fd_set* master_set; // ponteiro para o master_fds
+int max_fd;
+
+
+/*
+ * processa_comandos - Processa comandos digitados pelo usuário e executa as ações correspondentes.
+ *
+ * Parâmetros:
+ *   buffer - String contendo o comando digitado pelo usuário.
+ *   no - Estrutura contendo informações do nó atual.
+ *
+ * A função utiliza parse_buffer() para dividir o comando em palavras e
+ * verifica qual comando foi inserido para executar a ação apropriada.
+ */
+
+void processa_comandos(char *buffer, int tamanho_buffer, INFO_NO *no) {
+    system("clear");
+    
+    char words[10][100] = {""};
+    parse_buffer(buffer, tamanho_buffer, words);
+    
+    if (strcmp(words[0], "join") == 0 || strcmp(words[0], "j") == 0) {
+        printf("network = %s\n", words[1]);
+        //join();
+    } 
+    else if (strcmp(words[0], "direct") == 0 && strcmp(words[1], "join") == 0) {
+        printf("Network: %s\n", words[2]);
+        printf("IP: %s\n", words[3]);
+        printf("Porta: %s\n", words[4]);
+        direct_join(words[2], *no, words[3], words[4], *master_set, max_fd);
+    } 
+    else if(strcmp("dj", words[0]) == 0){
+        printf("Network: %s\n", words[1]);
+        printf("IP: %s\n", words[2]);
+        printf("Porta: %s\n", words[3]);
+        //direct_join();
+    }
+    else if (strcmp(words[0], "create") == 0 || strcmp(words[0], "c") == 0) {
+        printf("Comando Create\n");
+        create(words[1], no);
+    }
+    else if (strcmp(words[0], "delete") == 0 || strcmp(words[0], "dl") == 0) {
+        printf("Comando delete\n");
+    }
+    else if (strcmp(words[0], "retrieve") == 0 || strcmp(words[0], "r") == 0) {
+        printf("Comando retrieve\n");
+    }
+    else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "topology") == 0) {
+        printf("show topology\n");
+    }
+    else if (strcmp(words[0], "st") == 0) {
+        printf("show topology\n");
+    }
+    else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "names") == 0) {
+        printf("show names\n");
+    }
+    else if (strcmp(words[0], "sn") == 0) {
+        printf("show names\n");
+    }
+    else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "interest") == 0 && strcmp(words[2], "table") == 0) {
+        printf("Comando show interest table\n");
+    }
+    else if (strcmp(words[0], "si") == 0) {
+        printf("show interest table\n");
+    }
+    else if (strcmp(words[0], "leave") == 0 || strcmp(words[0], "l") == 0) {
+        printf("Comando Leave\n");
+    }
+    else if (strcmp(words[0], "exit") == 0 || strcmp(words[0], "x") == 0) {
+        printf("Comando Exit\n");
+    }
+}
+
+
 int main(int argc, char** argv) {   
     if (argc != 4 && argc != 6) {
         return 1;
@@ -53,6 +127,8 @@ int main(int argc, char** argv) {
     int fd, new_fd, counter;
     fd_set master_fds, read_fds;
     
+    master_set = &master_fds;
+
     struct sockaddr addr;
     socklen_t addrlen;
     char buffer[TAMANHO_BUFFER];
@@ -71,7 +147,7 @@ int main(int argc, char** argv) {
     FD_ZERO(&master_fds);
     FD_SET(fd, &master_fds);
     FD_SET(STDIN_FILENO, &master_fds);
-    int max_fd = max(fd, STDIN_FILENO);
+    max_fd = max(fd, STDIN_FILENO);
 
     printf("Servidor ouvindo na porta %s...\n", no.id.tcp);
     while (1) {

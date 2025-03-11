@@ -70,9 +70,7 @@ int testa_formato_net(char *net);
 
 // Funções da NDN
 int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP);
-int direct_join(REDE *rede, INFO_NO no, char *connectIP, 
+int direct_join(char *rede_id, INFO_NO no, char *connectIP, 
     char *connectTCP, fd_set master_fds, int max_fd);
 int create(char *name, INFO_NO *no);
 void parse_buffer(char *buffer, int tamanho_buffer, char words[10][100]);
-void processa_comandos(char *buffer, int tamanho_buffer, INFO_NO *no);
-

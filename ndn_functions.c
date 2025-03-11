@@ -160,11 +160,18 @@ int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP) {
     return 0;  
 }
 
-int direct_join(REDE *rede, INFO_NO no, char *connectIP, 
-    char *connectTCP, fd_set master_fds, int max_fd) {
+int direct_join(char *rede_id, INFO_NO no, char *connectIP, 
+    char *connectTCP, fd_set *master_set, int max_fd) {
+
+    int error = testa_formato_rede(rede_id);
+    error = testa_formato_ip(connectIP);
+    error = testa_formato_porto(connectTCP);
+    
+    if (error){
+        printf("Erro, formato do IP ou do porto não corresponde");
+        return 1;
+    }
     if (strcmp(connectIP, "0.0.0.0") == 0) {
-        rede->total_nos = 1;
-        rede->nos_rede[0] = no;
         return 1; 
     }
 
@@ -202,7 +209,7 @@ int direct_join(REDE *rede, INFO_NO no, char *connectIP,
     //f_update_vz_ext(fd, connectIP, connectTCP);
     printf("Updated external neighbour to %s:%s.\n", connectIP, connectTCP);
 
-    FD_SET(fd, &master_fds);
+    FD_SET(fd, master_set);
     if (fd > max_fd) max_fd = fd;
 
     f_msg(fd, ENTRY_msg, no.id.ip, no.id.tcp);
@@ -242,76 +249,6 @@ void parse_buffer(char *buffer, int tamanho_buffer, char words[10][100]) {
         token = strtok(NULL, " ");
     }
 }
-
-/*
- * processa_comandos - Processa comandos digitados pelo usuário e executa as ações correspondentes.
- *
- * Parâmetros:
- *   buffer - String contendo o comando digitado pelo usuário.
- *   no - Estrutura contendo informações do nó atual.
- *
- * A função utiliza parse_buffer() para dividir o comando em palavras e
- * verifica qual comando foi inserido para executar a ação apropriada.
- */
-
-void processa_comandos(char *buffer, int tamanho_buffer, INFO_NO *no) {
-    system("clear");
-    
-    char words[10][100] = {""};
-    parse_buffer(buffer, tamanho_buffer, words);
-    
-    if (strcmp(words[0], "join") == 0 || strcmp(words[0], "j") == 0) {
-        printf("network = %s\n", words[1]);
-        //join();
-    } 
-    else if (strcmp(words[0], "direct") == 0 && strcmp(words[1], "join") == 0) {
-        printf("Network: %s\n", words[2]);
-        printf("IP: %s\n", words[3]);
-        printf("Porta: %s\n", words[4]);
-        //direct_join();
-    } 
-    else if(strcmp("dj", words[0]) == 0){
-        printf("Network: %s\n", words[1]);
-        printf("IP: %s\n", words[2]);
-        printf("Porta: %s\n", words[3]);
-        //direct_join();
-    }
-    else if (strcmp(words[0], "create") == 0 || strcmp(words[0], "c") == 0) {
-        printf("Comando Create\n");
-        create(words[1], no);
-    }
-    else if (strcmp(words[0], "delete") == 0 || strcmp(words[0], "dl") == 0) {
-        printf("Comando delete\n");
-    }
-    else if (strcmp(words[0], "retrieve") == 0 || strcmp(words[0], "r") == 0) {
-        printf("Comando retrieve\n");
-    }
-    else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "topology") == 0) {
-        printf("show topology\n");
-    }
-    else if (strcmp(words[0], "st") == 0) {
-        printf("show topology\n");
-    }
-    else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "names") == 0) {
-        printf("show names\n");
-    }
-    else if (strcmp(words[0], "sn") == 0) {
-        printf("show names\n");
-    }
-    else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "interest") == 0 && strcmp(words[2], "table") == 0) {
-        printf("Comando show interest table\n");
-    }
-    else if (strcmp(words[0], "si") == 0) {
-        printf("show interest table\n");
-    }
-    else if (strcmp(words[0], "leave") == 0 || strcmp(words[0], "l") == 0) {
-        printf("Comando Leave\n");
-    }
-    else if (strcmp(words[0], "exit") == 0 || strcmp(words[0], "x") == 0) {
-        printf("Comando Exit\n");
-    }
-}
-
 
 int create(char *name, INFO_NO *no) {
     if (strlen(name) >= tamanho_max_obj) {
