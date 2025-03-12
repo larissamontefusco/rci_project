@@ -18,6 +18,8 @@
 
 fd_set* master_set; // ponteiro para o master_fds
 int max_fd;
+char regIP[tamanho_ip] = "193.136.138.142";
+char regUDP[tamanho_porto] = "59000";
 
 /*
  * processa_comandos - Processa comandos digitados pelo usuário e executa as ações correspondentes.
@@ -38,6 +40,7 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
     if (fd == STDIN_FILENO) {
         if (strcmp(words[0], "join") == 0 || strcmp(words[0], "j") == 0) {
             printf("network = %s\n", words[1]);
+            join(words[1], no, regIP, regUDP);
             return 0;
         } 
         else if (strcmp(words[0], "direct") == 0 && strcmp(words[1], "join") == 0) {
@@ -118,11 +121,6 @@ int main(int argc, char** argv) {
     
     INFO_NO no;
     inicializar_no(&no);
-    REDE rede_;
-    strcpy(rede_.id, "020");
-    
-    char regIP[tamanho_ip] = "193.136.138.142";
-    char regUDP[tamanho_porto] = "59000";
 
     strcpy(no.id.ip, argv[2]);
     strcpy(no.id.tcp, argv[3]);

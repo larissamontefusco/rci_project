@@ -18,7 +18,6 @@
 #define OBJECT 3
 #define NOOBJECT 4
 
-
 bool testa_invocacao_programa(int argc, char** argv)
 {
     if (argc != 4 && argc != 6) 
@@ -341,6 +340,88 @@ void show_topology(INFO_NO *no) {
     }
     
     printf("========================================\n\n");
+}
+
+/**
+ * @brief Entra em uma rede especificada enviando uma solicitação para o servidor.
+ *
+ * @param net    Identificador da rede (deve estar no formato 000-999).
+ * @param no     Estrutura contendo informações do nó atual (IP e porta TCP).
+ * @param regIP  Endereço IP do servidor de registro.
+ * @param regUDP Porta UDP do servidor de registro.
+ * @return int   Retorna 0 em caso de sucesso, ou -1 em caso de erro.
+ */
+
+int join(char *net, INFO_NO *no, char *regIP, char *regUDP) {
+    printf("[INFO] Iniciando processo de entrada na rede %s...\n", net);
+
+    int error = testa_formato_rede(net);
+    if (error) {
+        printf("[ERRO] Formato da rede %s não está correto. (Deve estar entre 000-999)\n", net);
+        return -1;
+    }
+    
+    struct addrinfo hints, *res;
+    int fd, errcode;
+    ssize_t n;
+    char msg[128], buffer[128 + 1];
+
+    // Criar socket UDP
+    printf("[INFO] Criando socket UDP...\n");
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd == -1) {
+        perror("[ERRO] Falha ao criar socket");
+        return -1;
+    }
+
+    // Configuração da estrutura hints
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET; // IPv4
+    hints.ai_socktype = SOCK_DGRAM; // UDP
+
+    // Obter endereço do servidor
+    printf("[INFO] Obtendo endereço do servidor %s:%s...\n", regIP, regUDP);
+    errcode = getaddrinfo(regIP, regUDP, &hints, &res);
+    if (errcode != 0) {
+        fprintf(stderr, "[ERRO] getaddrinfo: %s\n", gai_strerror(errcode));
+        close(fd);
+        return -1;
+    }
+
+    // Criar mensagem de entrada na rede
+    snprintf(msg, sizeof(msg), "join %s %s %s", net, no->id.ip, no->id.tcp);
+    printf("[INFO] Mensagem a ser enviada: %s\n", msg);
+
+    // Enviar mensagem
+    printf("[INFO] Enviando mensagem ao servidor...\n");
+    n = sendto(fd, msg, strlen(msg), 0, res->ai_addr, res->ai_addrlen);
+    if (n == -1) {
+        perror("[ERRO] Falha ao enviar mensagem");
+        freeaddrinfo(res);
+        close(fd);
+        return -1;
+    }
+    printf("[SUCESSO] Mensagem enviada com sucesso.\n");
+
+    // Receber resposta
+    struct sockaddr addr;
+    socklen_t addrlen = sizeof(addr);
+    printf("[INFO] Aguardando resposta do servidor...\n");
+    n = recvfrom(fd, buffer, 128, 0, &addr, &addrlen);
+    if (n == -1) {
+        perror("[ERRO] Falha ao receber resposta do servidor");
+        freeaddrinfo(res);
+        close(fd);
+        return -1;
+    }
+    buffer[n] = '\0';
+    printf("[SUCESSO] Resposta do servidor recebida: %s\n", buffer);
+
+    // Liberar recursos
+    freeaddrinfo(res);
+    close(fd);
+    printf("[INFO] Processo de entrada na rede concluído com sucesso.\n");
+    return 0;
 }
 
 int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_set, int *max_fd) {

@@ -48,21 +48,6 @@ typedef struct info_no {
     char cache[n_max_obj][tamanho_max_obj]; // Cache de objetos armazenados
 } INFO_NO;
 
-/******************* Estrutura para representar uma rede *******************/
-/*
- * REDE - Estrutura que representa uma rede composta por múltiplos nós.
- * 
- * Campos:
- *   id         - Identificação única da rede.
- *   nos_rede   - Lista de nós que pertencem à rede.
- *   total_nos  - Número total de nós atualmente na rede.
- */
-typedef struct rede {
-    char id[4];                        // Identificador da rede (ex: "020")
-    INFO_NO nos_rede[n_max_nos];        // Lista de nós na rede
-    int total_nos;                      // Contador de nós ativos
-} REDE;
-
 
 // Funções para teste de formato:
 int testa_formato_ip(char* ip);
@@ -70,6 +55,7 @@ int testa_formato_porto(char *porto);
 int testa_formato_rede(char *net);
 
 // Funções da NDN
+int join(char *net, INFO_NO *no, char *regIP, char *regUDP);
 int direct_join(INFO_NO *no, char *connectIP, 
     char *connectPort, fd_set *fds, int *maxfd);
 void show_topology(INFO_NO *no);
