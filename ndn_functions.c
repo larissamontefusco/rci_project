@@ -23,24 +23,24 @@ bool testa_invocacao_programa(int argc, char** argv)
 {
     if (argc != 4 && argc != 6) 
     {
-        printf("\n\tErro no número de argumentos!\n"); 
+        printf("[ERRO] ❌ Número de argumentos inválido!\n"); 
         return true;
     }
 
     int error = 0;
     error = testa_formato_ip(argv[2]);
-    printf("\nerror_ip = %d\n", error);
+    
     if (error) 
     {
-        printf("\nFormato de IP inválido!\n");
+        printf("[ERRO] ❌ Número de IP inválido!\n");
         return true;
     }
 
     error = testa_formato_porto(argv[3]);
-    printf("\nerror_porto = %d\n", error);
+    
     if (error) 
     {
-        printf("\nFormato do porto TCP inválido!\n");
+        printf("[ERRO] ❌ Formato do porto TCP inválido!\n");
         return true;
     }
 
@@ -50,17 +50,17 @@ return false;
 
 void inicializar_no(INFO_NO *no) {
     // Inicializa o nó principal como sem conexão
-    no->id.fd = SEM_CONEXAO;
+    no->id.fd = -1;
 
     // Inicializa o vizinho externo como sem conexão
-    no->no_ext.fd = SEM_CONEXAO;
+    no->no_ext.fd = -1;
 
     // Inicializa o vizinho de salvaguarda como sem conexão
-    no->no_salv.fd = SEM_CONEXAO;
+    no->no_salv.fd = -1;
 
     // Inicializa todos os vizinhos internos como sem conexão
     for (int i = 0; i < n_max_internos; i++) {
-        no->no_int[i].fd = SEM_CONEXAO;
+        no->no_int[i].fd = -1;
     }
 
     // Limpa chaches
@@ -129,10 +129,19 @@ void inicializar_no(INFO_NO *no) {
  * @param no Estrutura do nó a ser atualizada.
  */
 
- void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO* no) {
-    no->id.fd = fd;
-    strcpy(no->id.ip, ip);
-    strcpy(no->id.tcp, port);
+void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO* no) {
+    printf("\n🔄 Atualizando vizinho externo...\n");
+
+    no->no_ext.fd = fd;
+    printf("✅ File descriptor atualizado: %d\n", fd);
+
+    strcpy(no->no_ext.ip, ip);
+    printf("🌍 IP atualizado: %s\n", ip);
+
+    strcpy(no->no_ext.tcp, port);
+    printf("🔗 Porta TCP atualizada: %s\n", port);
+
+    printf("✅ Atualização concluída com sucesso! 🎉\n\n");
 }
 
 
@@ -145,7 +154,7 @@ void inicializar_no(INFO_NO *no) {
  * @param port Porta TCP do nó salvo.
  */
 
- void recebendo_safe(INFO_NO *no, ESTADO_FD fd, char* ip, char* port) {
+ void recebendo_safe(INFO_NO *no, int fd, char* ip, char* port) {
     printf("[LOG] Recebendo safe: fd=%d, ip=%s, port=%s\n", fd, ip, port);
     
     no->no_salv.fd = fd;
@@ -169,23 +178,23 @@ void inicializar_no(INFO_NO *no) {
  void recebendo_entry(INFO_NO* no, int fd, char* ip, char* port) {
     printf("[LOG] Recebendo entry: fd=%d, ip=%s, port=%s\n", fd, ip, port);
     
-    if (no->id.fd == SEM_CONEXAO) { // Primeira conexão, atualizar vizinho externo
+    if (no->id.fd == -1) { // Primeira conexão, atualizar vizinho externo
         printf("[LOG] Primeira conexão detectada. Atualizando vizinho externo.\n");
         atualiza_viz_externo(fd, ip, port, no);
-        recebendo_safe(no, PROPRIO_NO, no->id.ip, no->id.tcp);
+        recebendo_safe(no, -2, no->id.ip, no->id.tcp);
         printf("[LOG] ✅ Vizinho externo atualizado com sucesso.\n");
     } else {
         INFO_NO novo_ext; // Criar estrutura na stack, sem malloc
         novo_ext.id.fd = fd;
         strcpy(novo_ext.id.ip, ip);
         strcpy(novo_ext.id.tcp, port);
-        novo_ext.no_ext.fd = SEM_CONEXAO;
-        novo_ext.no_salv.fd = SEM_CONEXAO;
+        novo_ext.no_ext.fd = -1;
+        novo_ext.no_salv.fd = -1;
 
         // Adicionar novo vizinho interno
         int i;
         for (i = 0; i < n_max_internos; i++) {
-            if (no->no_int[i].fd == SEM_CONEXAO) { // Encontrar posição vazia
+            if (no->no_int[i].fd == -1) { // Encontrar posição vazia
                 no->no_int[i] = novo_ext.id; // Adicionar vizinho interno
                 printf("[LOG] Vizinho interno adicionado na posição %d.\n", i);
                 break;
@@ -310,14 +319,15 @@ int testa_formato_ip(char* ip) {
 
 void show_topology(INFO_NO *no) {
     printf("========================================\n");
+    printf("🌐 Vizinhos Externos:\n");
     
-    if (no->id.fd != SEM_CONEXAO) {
+    if (no->id.fd != -1) {
         printf("🔗 Vizinho Externo: %s:%s\n\n", no->no_ext.ip, no->no_ext.tcp);
     } else {
         printf("[INFO] Atualmente sem vizinho externo.\n\n");
     }
 
-    if (no->no_salv.fd != SEM_CONEXAO) {
+    if (no->no_salv.fd != -1) {
         printf("🛡️  Vizinho de Salvaguarda: %s:%s\n\n", no->no_salv.ip, no->no_salv.tcp);
     } else {
         printf("[INFO] Atualmente sem vizinho de salvaguarda.\n\n");
@@ -326,7 +336,7 @@ void show_topology(INFO_NO *no) {
     printf("🌐 Vizinhos Internos:\n");
     int tem_vizinhos = 0;
     for (int i = 0; i < n_max_internos; i++) {
-        if (no->no_int[i].fd != SEM_CONEXAO) {
+        if (no->no_int[i].fd != -1) {
             printf("   - %s:%s\n", no->no_int[i].ip, no->no_int[i].tcp);
             tem_vizinhos = 1;
         }
@@ -354,7 +364,7 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
         return 1; 
     }
 
-    if (no->id.fd != SEM_CONEXAO) {
+    if (no->id.fd != -1) {
         printf("Already connected to a server. Aborting direct join.\n");
         return 1;
     }
@@ -438,7 +448,7 @@ int create(char *name, INFO_NO *no) {
     for (int i = 0; i < n_max_obj; i++) {
         if (no->cache[i][0] == '\0') { // Se a posição estiver vazia
             strcpy(no->cache[i], name);
-            printf("Objeto '%s' armazenado na posição %d do cache.\n", name, i);
+            printf("[LOG] ✅ Objeto '%s' armazenado na posição %d do cache com sucesso.\n", name, i);
             return 0;
         }
     }

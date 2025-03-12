@@ -49,7 +49,6 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
             return 0;
         }
         else if (strcmp(words[0], "create") == 0 || strcmp(words[0], "c") == 0) {
-            printf("Comando Create\n");
             create(words[1], no);
             return 0;
         }
@@ -115,11 +114,7 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
 
 int main(int argc, char** argv) {   
     // Testa se os parametros dados na linha de comando estão correctos
-    if (testa_invocacao_programa(argc,argv)) 
-    {
-        printf("Erro na invocação do programa!");
-        exit(1);
-    }
+    if (testa_invocacao_programa(argc,argv)) exit(1);
     
     INFO_NO no;
     inicializar_no(&no);

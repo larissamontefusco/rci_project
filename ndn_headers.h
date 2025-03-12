@@ -14,13 +14,6 @@
 #define tamanho_max_obj 100
 #define n_max_nos 100
 
-
-
-typedef enum {
-    SEM_CONEXAO = -1,  // Sem conexão
-    PROPRIO_NO = -2    // Representa o próprio nó
-} ESTADO_FD;
-
 /******************* Estrutura para identificação de um nó *******************/
 /*
  * ID_NO - Estrutura que armazena as informações básicas de um nó na rede.
@@ -33,7 +26,7 @@ typedef enum {
 typedef struct no {
     char ip[tamanho_ip];   // Endereço IP do nó
     char tcp[tamanho_porto]; // Porta TCP do nó
-    ESTADO_FD fd; // Descritor de arquivo do socket
+    int fd; // Descritor de arquivo do socket
 } ID_NO;
 
 /****************** Estrutura para armazenar informações de um nó ******************/
@@ -82,8 +75,7 @@ int direct_join(INFO_NO *no, char *connectIP,
 void show_topology(INFO_NO *no);
 int create(char *name, INFO_NO *no);
 void parse_buffer(char *buffer, int tamanho_buffer, char words[10][100]);
-void recebendo_safe(INFO_NO *no, ESTADO_FD fd, char* ip, char* port);
+void recebendo_safe(INFO_NO *no, int fd, char* ip, char* port);
 void recebendo_entry(INFO_NO* no, int fd, char* ip, char* port);
 void inicializar_no(INFO_NO *no);
-
 bool testa_invocacao_programa(int argc, char** argv);
