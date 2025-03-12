@@ -201,7 +201,7 @@ void recebendo_safe(INFO_NO *no, int fd, char* ip, char* port) {
  void recebendo_entry(INFO_NO* no, int fd, char* ip, char* port) {
     printf("[LOG] Recebendo entry: fd=%d, ip=%s, port=%s\n", fd, ip, port);
     
-    if (no->id.fd == -1) { // Primeira conexão, atualizar vizinho externo
+    if (no->no_ext.fd == -1) { // Primeira conexão, atualizar vizinho externo
         printf("[LOG] Primeira conexão detectada. Atualizando vizinho externo.\n");
         atualiza_viz_externo(fd, ip, port, no);
         atualiza_viz_interno(fd, ip, port, no);
@@ -213,7 +213,7 @@ void recebendo_safe(INFO_NO *no, int fd, char* ip, char* port) {
         atualiza_viz_interno(fd, ip, port, no);
         
         printf("[LOG] 📩 Enviando mensagem SAFE para fd=%d, ip=%s, port=%s\n", fd, ip, port);
-        mensagens(fd, SAFE, ip, port);
+        mensagens(no->no_ext.fd, SAFE, no->no_ext.ip, no->no_ext.tcp);
         printf("[LOG] ✅ Operação de entry concluída com sucesso.\n");
     }
 }
@@ -447,14 +447,28 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
     printf("direct_join foi chamada com IP=%s, Porta=%s\n", connectIP, connectTCP);
 
     int error = testa_formato_ip(connectIP);
-    error = testa_formato_porto(connectTCP);
     
     if (error) {
-        printf("Erro: formato do IP ou da porta está incorreto\n");
+        printf("Erro: formato do IP está incorreto\n");
         return -1;
     }
+    if (strcmp(connectIP, no->id.ip) && strcmp(connectTCP, no->id.tcp)){
+        printf("Erro: Se quiser utilizar o dj com o próprio nó, deves digitar dj 0.0.0.0\n");
+        return -1;
+    }
+    
     if (strcmp(connectIP, "0.0.0.0") == 0) {
-        return -1; 
+        no->no_ext.fd = no->id.fd;
+        strcpy(no->no_ext.ip, no->id.ip);
+        strcpy(no->no_ext.tcp, no->id.tcp);
+        printf("O nó agora é seu próprio vizinho externo.\n");
+        return 0;  
+    }
+
+    error = testa_formato_porto(connectTCP);
+    if (error) {
+        printf("Erro: formato da porta TCP está incorreto\n");
+        return -1;
     }
 
     if (no->id.fd != -1) {
