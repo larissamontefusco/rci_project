@@ -315,6 +315,15 @@ int testa_formato_ip(char* ip) {
     return 0; // IP válido
 }
 
+/**
+ * @brief Exibe a topologia da rede do nó atual.
+ *
+ * Esta função imprime na tela os vizinhos externos, internos e o vizinho de salvaguarda do nó.
+ * Caso algum dos tipos de vizinhos não esteja presente, é exibida uma mensagem informativa.
+ *
+ * @param no Ponteiro para a estrutura INFO_NO que contém as informações sobre os vizinhos.
+ */
+
 void show_topology(INFO_NO *no) {
     printf("========================================\n");
     printf("🌐 Vizinhos Externos:\n");
