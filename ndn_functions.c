@@ -320,11 +320,7 @@ void show_topology(INFO_NO *no) {
     printf("========================================\n");
     printf("🌐 Vizinhos Externos:\n");
     
-    if (no->id.fd != -1) {
-        printf("🔗 Vizinho Externo: %s:%s\n\n", no->no_ext.ip, no->no_ext.tcp);
-    } else {
-        printf("[INFO] Atualmente sem vizinho externo.\n\n");
-    }
+    printf("🔗 Vizinho Externo: %s:%s\n\n", no->no_ext.ip, no->no_ext.tcp);
 
     if (no->no_salv.fd != -1) {
         printf("🛡️  Vizinho de Salvaguarda: %s:%s\n\n", no->no_salv.ip, no->no_salv.tcp);
@@ -349,14 +345,13 @@ void show_topology(INFO_NO *no) {
 
 int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_set, int *max_fd) {
     
-    printf("direct_join foi chamada com IP=%s, Port=%s\n", 
-        connectIP, connectTCP);
+    printf("direct_join foi chamada com IP=%s, Porta=%s\n", connectIP, connectTCP);
 
     int error = testa_formato_ip(connectIP);
     error = testa_formato_porto(connectTCP);
     
     if (error) {
-        printf("Erro, formato do IP ou do porto não corresponde\n");
+        printf("Erro: formato do IP ou da porta está incorreto\n");
         return 1;
     }
     if (strcmp(connectIP, "0.0.0.0") == 0) {
@@ -364,7 +359,7 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
     }
 
     if (no->id.fd != -1) {
-        printf("Already connected to a server. Aborting direct join.\n");
+        printf("Já está conectado a um servidor. Abortando conexão direta.\n");
         return 1;
     }
 
@@ -372,7 +367,7 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
     struct addrinfo hints, *res;
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
-        perror("socket");
+        perror("Erro ao criar socket");
         exit(1);
     }
     
@@ -382,19 +377,23 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
     
     errcode = getaddrinfo(connectIP, connectTCP, &hints, &res);
     if (errcode != 0) {
-        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(errcode));
+        fprintf(stderr, "Erro no getaddrinfo: %s\n", gai_strerror(errcode));
         return 1;
     }
     
     n = connect(fd, res->ai_addr, res->ai_addrlen);
     if (n == -1) {
-        perror("connect");
+        perror("Erro ao conectar");
         exit(1);
     }
 
-    printf("Connected to %s:%s on FD %d.\n", connectIP, connectTCP, fd);
-    atualiza_viz_externo(fd, connectIP, connectTCP, no);  // Passando ponteiro corretamente
-    printf("Updated external neighbour to %s:%s.\n", connectIP, connectTCP);
+    printf("Conectado a %s:%s no descritor de arquivo %d.\n", connectIP, connectTCP, fd);
+    
+    atualiza_viz_externo(fd, connectIP, connectTCP, no);
+
+    printf("Vizinho externo atualizado para %s:%s.\n", connectIP, connectTCP);
+    printf("Meu nó = %s %s", no->id.tcp, no->id.ip);
+    sleep(5);  // Espera 2 segundos para visualizar a saída no terminal
 
     FD_SET(fd, master_set);
     if (fd > *max_fd) *max_fd = fd;
@@ -402,7 +401,6 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
     mensagens(fd, ENTRY, no->id.ip, no->id.tcp);
     return 0; 
 }
-
 
 /*
  * Função: parse_buffer
