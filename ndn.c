@@ -40,7 +40,7 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
     if (fd == STDIN_FILENO) {
         if (strcmp(words[0], "join") == 0 || strcmp(words[0], "j") == 0) {
             printf("network = %s\n", words[1]);
-            join(words[1], no, regIP, regUDP);
+            join(words[1], no, regIP, regUDP, master_set, &max_fd);
             return 0;
         } 
         else if (strcmp(words[0], "direct") == 0 && strcmp(words[1], "join") == 0) {

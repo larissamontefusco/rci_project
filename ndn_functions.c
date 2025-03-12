@@ -370,7 +370,7 @@ void show_topology(INFO_NO *no) {
  * @return int   Retorna 0 em caso de sucesso, ou -1 em caso de erro.
  */
 
-int join(char *net, INFO_NO *no, char *regIP, char *regUDP) {
+ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, int *max_fd) {
     printf("[INFO] Iniciando processo de entrada na rede %s...\n", net);
 
     int error = testa_formato_rede(net);
@@ -381,8 +381,6 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP) {
     
     struct addrinfo hints, *res;
     int fd, errcode;
-    ssize_t n;
-    char msg[128], buffer[128 + 1];
 
     // Criar socket UDP
     printf("[INFO] Criando socket UDP...\n");
@@ -406,40 +404,26 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP) {
         return -1;
     }
 
-    // Criar mensagem de entrada na rede
-    snprintf(msg, sizeof(msg), "join %s %s %s", net, no->id.ip, no->id.tcp);
-    printf("[INFO] Mensagem a ser enviada: %s\n", msg);
-
-    // Enviar mensagem
-    printf("[INFO] Enviando mensagem ao servidor...\n");
-    n = sendto(fd, msg, strlen(msg), 0, res->ai_addr, res->ai_addrlen);
-    if (n == -1) {
-        perror("[ERRO] Falha ao enviar mensagem");
+    // Conectar ao servidor
+    if (connect(fd, res->ai_addr, res->ai_addrlen) == -1) {
+        perror("[ERRO] Falha ao conectar ao servidor");
         freeaddrinfo(res);
         close(fd);
         return -1;
     }
-    printf("[SUCESSO] Mensagem enviada com sucesso.\n");
 
-    // Receber resposta
-    struct sockaddr addr;
-    socklen_t addrlen = sizeof(addr);
-    printf("[INFO] Aguardando resposta do servidor...\n");
-    n = recvfrom(fd, buffer, 128, 0, &addr, &addrlen);
-    if (n == -1) {
-        perror("[ERRO] Falha ao receber resposta do servidor");
-        freeaddrinfo(res);
-        close(fd);
-        return -1;
-    }
-    buffer[n] = '\0';
-    printf("[SUCESSO] Resposta do servidor recebida: %s\n", buffer);
+    // Adicionar socket ao conjunto master_set
+    FD_SET(fd, master_set);
+    if (fd > *max_fd) *max_fd = fd;
 
+    // Enviar mensagem de entrada na rede
+    mensagens(fd, ENTRY, no->id.ip, no->id.tcp);
+    
     // Liberar recursos
     freeaddrinfo(res);
-    close(fd);
     printf("[INFO] Processo de entrada na rede concluído com sucesso.\n");
-    return 0;
+
+    return fd; // Retornar o socket para uso futuro
 }
 
 int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_set, int *max_fd) {
