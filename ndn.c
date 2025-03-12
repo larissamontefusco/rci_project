@@ -41,17 +41,11 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
             return 0;
         } 
         else if (strcmp(words[0], "direct") == 0 && strcmp(words[1], "join") == 0) {
-            printf("Network: %s\n", words[2]);
-            printf("IP: %s\n", words[3]);
-            printf("Porta: %s\n", words[4]);
-            direct_join(words[2], no, words[3], words[4], master_set, &max_fd);
+            direct_join(no, words[2], words[3], master_set, &max_fd);
             return 0;
         } 
         else if(strcmp("dj", words[0]) == 0){
-            printf("Network: %s\n", words[1]);
-            printf("IP: %s\n", words[2]);
-            printf("Porta: %s\n", words[3]);
-            direct_join(words[1], no, words[2], words[3], master_set, &max_fd);
+            direct_join(no, words[1], words[2], master_set, &max_fd);
             return 0;
         }
         else if (strcmp(words[0], "create") == 0 || strcmp(words[0], "c") == 0) {
@@ -198,7 +192,7 @@ int main(int argc, char** argv) {
     while (1) {
         if (finalizar_programa) {
             printf("Obrigado por utilizar nosso sistema! Até a próxima! 😃\n");
-            break;
+            exit(0);
         }
         read_fds = master_fds;
         

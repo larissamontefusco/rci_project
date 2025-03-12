@@ -280,11 +280,6 @@ int testa_formato_ip(char* ip) {
     return 0; // IP válido
 }
 
-int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP) {
-    // Isso aqui é UDP
-    return 0;  
-}
-
 void show_topology(INFO_NO *no) {
     printf("========================================\n");
     
@@ -315,13 +310,12 @@ void show_topology(INFO_NO *no) {
     printf("========================================\n\n");
 }
 
-int direct_join(char *rede_id, INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_set, int *max_fd) {
+int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_set, int *max_fd) {
     
-    printf("direct_join foi chamada com rede_id=%s, IP=%s, Port=%s\n", 
-        rede_id, connectIP, connectTCP);
+    printf("direct_join foi chamada com IP=%s, Port=%s\n", 
+        connectIP, connectTCP);
 
-    int error = testa_formato_rede(rede_id);
-    error = testa_formato_ip(connectIP);
+    int error = testa_formato_ip(connectIP);
     error = testa_formato_porto(connectTCP);
     
     if (error) {
