@@ -85,3 +85,4 @@ int create(char *name, INFO_NO *no);
 void parse_buffer(char *buffer, int tamanho_buffer, char words[10][100]);
 void recebendo_safe(INFO_NO *no, ESTADO_FD fd, char* ip, char* port);
 void recebendo_entry(INFO_NO* no, int fd, char* ip, char* port);
+void inicializar_no(INFO_NO *no);

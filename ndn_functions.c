@@ -19,6 +19,27 @@
 #define NOOBJECT 4
 
 
+
+void inicializar_no(INFO_NO *no) {
+    // Inicializa o nó principal como sem conexão
+    no->id.fd = SEM_CONEXAO;
+
+    // Inicializa o vizinho externo como sem conexão
+    no->no_ext.fd = SEM_CONEXAO;
+
+    // Inicializa o vizinho de salvaguarda como sem conexão
+    no->no_salv.fd = SEM_CONEXAO;
+
+    // Inicializa todos os vizinhos internos como sem conexão
+    for (int i = 0; i < n_max_internos; i++) {
+        no->no_int[i].fd = SEM_CONEXAO;
+    }
+
+    // Limpa chaches
+    memset(no->cache, 0, sizeof(no->cache));
+}
+
+
 /**
  * @brief Envia uma mensagem formatada para um descritor de arquivo.
  * 
@@ -265,7 +286,6 @@ int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP) {
 }
 
 void show_topology(INFO_NO *no) {
-
     printf("========================================\n");
     
     if (no->id.fd != SEM_CONEXAO) {
@@ -278,6 +298,18 @@ void show_topology(INFO_NO *no) {
         printf("🛡️  Vizinho de Salvaguarda: %s:%s\n\n", no->no_salv.ip, no->no_salv.tcp);
     } else {
         printf("[INFO] Atualmente sem vizinho de salvaguarda.\n\n");
+    }
+    
+    printf("🌐 Vizinhos Internos:\n");
+    int tem_vizinhos = 0;
+    for (int i = 0; i < n_max_internos; i++) {
+        if (no->no_int[i].fd != SEM_CONEXAO) {
+            printf("   - %s:%s\n", no->no_int[i].ip, no->no_int[i].tcp);
+            tem_vizinhos = 1;
+        }
+    }
+    if (!tem_vizinhos) {
+        printf("   [INFO] Nenhum vizinho interno encontrado.\n");
     }
     
     printf("========================================\n\n");

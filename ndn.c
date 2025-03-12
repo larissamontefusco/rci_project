@@ -125,6 +125,7 @@ int main(int argc, char** argv) {
     }
 
     INFO_NO no;
+    inicializar_no(&no);
     REDE rede_;
     strcpy(rede_.id, "020");
     
@@ -138,12 +139,9 @@ int main(int argc, char** argv) {
         printf("Formato de inputs inválido!\n");
         return 1;
     }
-
+    
     strcpy(no.id.ip, argv[2]);
     strcpy(no.id.tcp, argv[3]);
-    no.id.fd = SEM_CONEXAO;
-    no.no_ext.fd = SEM_CONEXAO;
-    no.no_salv.fd = SEM_CONEXAO;
 
     if (argc == 6) {
         strcpy(regIP, argv[4]);
