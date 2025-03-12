@@ -19,26 +19,48 @@
 #define NOOBJECT 4
 
 
-void mensagens(int fd, int type, char* name, char* tcp){
+/**
+ * @brief Envia uma mensagem formatada para um descritor de arquivo.
+ * 
+ * @param fd Descritor de arquivo de destino.
+ * @param type Tipo da mensagem (ENTRY, SAFE, etc.).
+ * @param name Nome ou IP do destinatário.
+ * @param tcp Porta TCP do destinatário.
+ */
+
+ void mensagens(int fd, int type, char* name, char* tcp) {
     char* msg;
+    char* msg_type;
     int length;
 
-    switch(type){
+    switch(type) {
         case ENTRY:
+            msg_type = "ENTRY";
+            break;
         case SAFE:
-            length = snprintf(NULL, 0, "%d %s %s\n", type, name, tcp);
-            msg = malloc(length + 1);
-            sprintf(msg, "%d %s %s\n", type, name, tcp);
+            msg_type = "SAFE";
             break;
         case INTEREST:
+            msg_type = "INTEREST";
+            break;
         case OBJECT:
+            msg_type = "OBJECT";
+            break;
         case NOOBJECT:
-            length = snprintf(NULL, 0, "%d %s\n", type, name);
-            msg = malloc(length + 1);
-            sprintf(msg, "%d %s\n", type, name);
+            msg_type = "NOOBJECT";
             break;
         default:
             return;
+    }
+
+    if (type < INTEREST) {
+        length = snprintf(NULL, 0, "%s %s %s\n", msg_type, name, tcp);
+        msg = malloc(length + 1);
+        sprintf(msg, "%s %s %s\n", msg_type, name, tcp);
+    } else {
+        length = snprintf(NULL, 0, "%s %s\n", msg_type, name);
+        msg = malloc(length + 1);
+        sprintf(msg, "%s %s\n", msg_type, name);
     }
 
     if (write(fd, msg, length) == -1) {
@@ -49,6 +71,14 @@ void mensagens(int fd, int type, char* name, char* tcp){
     free(msg);
 }
 
+/**
+ * @brief Atualiza o vizinho externo do nó.
+ * 
+ * @param fd Descritor de arquivo do novo vizinho externo.
+ * @param ip Endereço IP do vizinho externo.
+ * @param port Porta TCP do vizinho externo.
+ * @param no Estrutura do nó a ser atualizada.
+ */
 
 void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO no){
     no.id.fd = fd;
@@ -56,6 +86,72 @@ void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO no){
     strcpy(no.id.tcp,port); 
 }
 
+/**
+ * @brief Atualiza as informações do nó salvo.
+ * 
+ * @param no Estrutura do nó a ser atualizada.
+ * @param fd Estado do descritor de arquivo.
+ * @param ip Endereço IP do nó salvo.
+ * @param port Porta TCP do nó salvo.
+ */
+
+ void recebendo_safe(INFO_NO no, ESTADO_FD fd, char* ip, char* port) {
+    printf("[LOG] Recebendo safe: fd=%d, ip=%s, port=%s\n", fd, ip, port);
+    
+    no.no_salv.fd = fd;
+    strcpy(no.no_salv.ip, ip);
+    strcpy(no.no_salv.tcp, port);
+    
+    printf("[LOG] Estado salvo: fd=%d, ip=%s, port=%s\n", no.no_salv.fd, no.no_salv.ip, no.no_salv.tcp);
+    printf("[LOG] ✅ Operação de safe concluída com sucesso.\n");
+}
+
+
+/**
+ * @brief Processa a chegada de um nó ENTRY e atualiza as estruturas adequadamente.
+ * 
+ * @param no Estrutura do nó a ser atualizada.
+ * @param fd Descritor de arquivo do nó que enviou ENTRY.
+ * @param ip Endereço IP do nó que enviou ENTRY.
+ * @param port Porta TCP do nó que enviou ENTRY.
+ */
+
+ void recebendo_entry(INFO_NO* no, int fd, char* ip, char* port) {
+    printf("[LOG] Recebendo entry: fd=%d, ip=%s, port=%s\n", fd, ip, port);
+    
+    if (no->id.fd == SEM_CONEXAO) { // Primeira conexão, atualizar vizinho externo
+        printf("[LOG] Primeira conexão detectada. Atualizando vizinho externo.\n");
+        atualiza_viz_externo(fd, ip, port, *no);
+        recebendo_safe(*no, PROPRIO_NO, no->id.ip, no->id.tcp);
+        printf("[LOG] Vizinho externo atualizado com sucesso.\n");
+    } else {
+        printf("[LOG] Criando novo vizinho interno.\n");
+        INFO_NO novo_ext; // Criar estrutura na stack, sem malloc
+        novo_ext.id.fd = fd;
+        strcpy(novo_ext.id.ip, ip);
+        strcpy(novo_ext.id.tcp, port);
+        novo_ext.no_ext.fd = SEM_CONEXAO;
+        novo_ext.no_salv.fd = SEM_CONEXAO;
+
+        // Adicionar novo vizinho interno
+        int i;
+        for (i = 0; i < n_max_internos; i++) {
+            if (no->no_int[i].fd == SEM_CONEXAO) { // Encontrar posição vazia
+                no->no_int[i] = novo_ext.id; // Adicionar vizinho interno
+                printf("[LOG] Vizinho interno adicionado na posição %d.\n", i);
+                break;
+            }
+        }
+
+        if (i == n_max_internos) {
+            printf("[ERRO] Número máximo de vizinhos internos atingido!\n");
+            return;
+        }
+    }
+    printf("[LOG] Enviando mensagem SAFE para fd=%d, ip=%s, port=%s\n", fd, ip, port);
+    mensagens(fd, SAFE, ip, port);
+    printf("[LOG] ✅ Operação de entry concluída com sucesso.\n");
+}
 /*
  * testa_formato_porto - Verifica se a string fornecida representa uma porta TCP válida.
  *
