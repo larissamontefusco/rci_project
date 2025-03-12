@@ -12,26 +12,27 @@
 #include <ctype.h>
 #include "ndn_headers.h"
 
-#define ENTRY_msg 0
-#define SAFE_msg 1
-#define INTEREST_msg 2
-#define OBJECT_msg 3
-#define NOOBJECT_msg 4
+#define ENTRY 0
+#define SAFE 1
+#define INTEREST 2
+#define OBJECT 3
+#define NOOBJECT 4
 
-void f_msg(int fd, int type, char* name, char* tcp){
+
+void mensagens(int fd, int type, char* name, char* tcp){
     char* msg;
     int length;
 
     switch(type){
-        case ENTRY_msg:
-        case SAFE_msg:
+        case ENTRY:
+        case SAFE:
             length = snprintf(NULL, 0, "%d %s %s\n", type, name, tcp);
             msg = malloc(length + 1);
             sprintf(msg, "%d %s %s\n", type, name, tcp);
             break;
-        case INTEREST_msg:
-        case OBJECT_msg:
-        case NOOBJECT_msg:
+        case INTEREST:
+        case OBJECT:
+        case NOOBJECT:
             length = snprintf(NULL, 0, "%d %s\n", type, name);
             msg = malloc(length + 1);
             sprintf(msg, "%d %s\n", type, name);
@@ -49,7 +50,7 @@ void f_msg(int fd, int type, char* name, char* tcp){
 }
 
 
-void f_update_vz_ext(int fd, char* ip, char* port, INFO_NO no){
+void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO no){
     no.id.fd = fd;
     strcpy(no.id.ip,ip); 
     strcpy(no.id.tcp,port); 
@@ -171,13 +172,13 @@ void show_topology(INFO_NO no) {
 
     printf("========================================\n");
     
-    if (no.id.fd != -1) {
+    if (no.id.fd != SEM_CONEXAO) {
         printf("🔗 Vizinho Externo: %s:%s\n\n", no.no_ext.ip, no.no_ext.tcp);
     } else {
         printf("[INFO] Atualmente sem vizinho externo.\n\n");
     }
 
-    if (no.no_salv.fd != -1) {
+    if (no.no_salv.fd != SEM_CONEXAO) {
         printf("🛡️  Vizinho de Salvaguarda: %s:%s\n\n", no.no_salv.ip, no.no_salv.tcp);
     } else {
         printf("[INFO] Atualmente sem vizinho de salvaguarda.\n\n");
@@ -215,7 +216,7 @@ int direct_join(char *rede_id, INFO_NO no, char *connectIP, char *connectTCP, fd
         return 1; 
     }
 
-    if (no.id.fd != -1) {
+    if (no.id.fd != SEM_CONEXAO) {
         printf("Already connected to a server. Aborting direct join.\n");
         return 1;
     }
@@ -246,13 +247,13 @@ int direct_join(char *rede_id, INFO_NO no, char *connectIP, char *connectTCP, fd
     }
 
     printf("Connected to %s:%s on FD %d.\n", connectIP, connectTCP, fd);
-    f_update_vz_ext(fd, connectIP, connectTCP, no);
+    atualiza_viz_externo(fd, connectIP, connectTCP, no);
     printf("Updated external neighbour to %s:%s.\n", connectIP, connectTCP);
 
     FD_SET(fd, master_set);
     if (fd > *max_fd) *max_fd = fd;
 
-    f_msg(fd, ENTRY_msg, no.id.ip, no.id.tcp);
+    mensagens(fd, ENTRY, no.id.ip, no.id.tcp);
     return 0; 
 }
 

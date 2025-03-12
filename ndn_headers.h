@@ -14,6 +14,13 @@
 #define tamanho_max_obj 100
 #define n_max_nos 100
 
+
+
+typedef enum {
+    SEM_CONEXAO = -1,  // Sem conexão
+    PROPRIO_NO = -2    // Representa o próprio nó
+} ESTADO_FD;
+
 /******************* Estrutura para identificação de um nó *******************/
 /*
  * ID_NO - Estrutura que armazena as informações básicas de um nó na rede.
@@ -26,7 +33,7 @@
 typedef struct no {
     char ip[tamanho_ip];   // Endereço IP do nó
     char tcp[tamanho_porto]; // Porta TCP do nó
-    int fd; // Descritor de arquivo do socket
+    ESTADO_FD fd; // Descritor de arquivo do socket
 } ID_NO;
 
 /****************** Estrutura para armazenar informações de um nó ******************/
@@ -62,6 +69,7 @@ typedef struct rede {
     INFO_NO nos_rede[n_max_nos];        // Lista de nós na rede
     int total_nos;                      // Contador de nós ativos
 } REDE;
+
 
 // Funções para teste de formato:
 int testa_formato_ip(char* ip);
