@@ -154,13 +154,13 @@ void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO* no) {
  * @param port Porta TCP do nó salvo.
  */
 
- void recebendo_safe(INFO_NO *no, int fd, char* ip, char* port) {
+void recebendo_safe(INFO_NO *no, int fd, char* ip, char* port) {
     printf("[LOG] Recebendo safe: fd=%d, ip=%s, port=%s\n", fd, ip, port);
     
     no->no_salv.fd = fd;
     strcpy(no->no_salv.ip, ip);
     strcpy(no->no_salv.tcp, port);
-    
+
     printf("[LOG] Estado salvo: fd=%d, ip=%s, port=%s\n", no->no_salv.fd, no->no_salv.ip, no->no_salv.tcp);
     printf("[LOG] ✅ Operação de safe concluída com sucesso.\n");
 }
@@ -183,28 +183,27 @@ void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO* no) {
         atualiza_viz_externo(fd, ip, port, no);
         recebendo_safe(no, -2, no->id.ip, no->id.tcp);
         printf("[LOG] ✅ Vizinho externo atualizado com sucesso.\n");
-    } else {
-        INFO_NO novo_ext; // Criar estrutura na stack, sem malloc
-        novo_ext.id.fd = fd;
-        strcpy(novo_ext.id.ip, ip);
-        strcpy(novo_ext.id.tcp, port);
-        novo_ext.no_ext.fd = -1;
-        novo_ext.no_salv.fd = -1;
+    } 
+    INFO_NO novo_ext; // Criar estrutura na stack, sem malloc
+    novo_ext.id.fd = fd;
+    strcpy(novo_ext.id.ip, ip);
+    strcpy(novo_ext.id.tcp, port);
+    novo_ext.no_ext.fd = -1;
+    novo_ext.no_salv.fd = -1;
 
-        // Adicionar novo vizinho interno
-        int i;
-        for (i = 0; i < n_max_internos; i++) {
-            if (no->no_int[i].fd == -1) { // Encontrar posição vazia
-                no->no_int[i] = novo_ext.id; // Adicionar vizinho interno
-                printf("[LOG] Vizinho interno adicionado na posição %d.\n", i);
-                break;
-            }
+    // Adicionar novo vizinho interno
+    int i;
+    for (i = 0; i < n_max_internos; i++) {
+        if (no->no_int[i].fd == -1) { // Encontrar posição vazia
+            no->no_int[i] = novo_ext.id; // Adicionar vizinho interno
+            printf("[LOG] Vizinho interno adicionado na posição %d.\n", i);
+            break;
         }
+    }
 
-        if (i == n_max_internos) {
-            printf("[ERRO] ❌ Número máximo de vizinhos internos atingido!\n");
-            return;
-        }
+    if (i == n_max_internos) {
+        printf("[ERRO] ❌ Número máximo de vizinhos internos atingido!\n");
+        return;
     }
     printf("[LOG] 📩 Enviando mensagem SAFE para fd=%d, ip=%s, port=%s\n", fd, ip, port);
     mensagens(fd, SAFE, ip, port);
