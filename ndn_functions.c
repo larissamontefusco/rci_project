@@ -119,6 +119,30 @@ void inicializar_no(INFO_NO *no) {
     free(msg);
 }
 
+void atualiza_viz_interno(int fd, char* ip, char* port, INFO_NO* no) {
+    printf("\n🔄 Atualizando vizinho interno...\n");
+
+    // Procura um espaço disponível no array de vizinhos internos
+    for (int i = 0; i < n_max_internos; i++) {
+        if (no->no_int[i].fd == -1) {  // Encontra a primeira posição livre
+            no->no_int[i].fd = fd;
+            printf("✅ File descriptor atualizado: %d\n", fd);
+
+            strcpy(no->no_int[i].ip, ip);
+            printf("🌍 IP atualizado: %s\n", ip);
+
+            strcpy(no->no_int[i].tcp, port);
+            printf("🔗 Porta TCP atualizada: %s\n", port);
+
+            printf("✅ Vizinho interno adicionado com sucesso! 🎉\n\n");
+            return;
+        }
+    }
+
+    // Caso o array esteja cheio
+    printf("⚠️ Erro: Número máximo de vizinhos internos atingido!\n\n");
+}
+
 /**
  * @brief Atualiza o vizinho externo do nó.
  * 
@@ -180,33 +204,18 @@ void recebendo_safe(INFO_NO *no, int fd, char* ip, char* port) {
     if (no->id.fd == -1) { // Primeira conexão, atualizar vizinho externo
         printf("[LOG] Primeira conexão detectada. Atualizando vizinho externo.\n");
         atualiza_viz_externo(fd, ip, port, no);
+        atualiza_viz_interno(fd, ip, port, no);
         recebendo_safe(no, -2, no->id.ip, no->id.tcp);
         printf("[LOG] ✅ Vizinho externo atualizado com sucesso.\n");
     } 
-    INFO_NO novo_ext; // Criar estrutura na stack, sem malloc
-    novo_ext.id.fd = fd;
-    strcpy(novo_ext.id.ip, ip);
-    strcpy(novo_ext.id.tcp, port);
-    novo_ext.no_ext.fd = -1;
-    novo_ext.no_salv.fd = -1;
-
-    // Adicionar novo vizinho interno
-    int i;
-    for (i = 0; i < n_max_internos; i++) {
-        if (no->no_int[i].fd == -1) { // Encontrar posição vazia
-            no->no_int[i] = novo_ext.id; // Adicionar vizinho interno
-            printf("[LOG] Vizinho interno adicionado na posição %d.\n", i);
-            break;
-        }
+    else {
+        // Adicionar novo vizinho interno
+        atualiza_viz_interno(fd, ip, port, no);
+        
+        printf("[LOG] 📩 Enviando mensagem SAFE para fd=%d, ip=%s, port=%s\n", fd, ip, port);
+        mensagens(fd, SAFE, ip, port);
+        printf("[LOG] ✅ Operação de entry concluída com sucesso.\n");
     }
-
-    if (i == n_max_internos) {
-        printf("[ERRO] ❌ Número máximo de vizinhos internos atingido!\n");
-        return;
-    }
-    printf("[LOG] 📩 Enviando mensagem SAFE para fd=%d, ip=%s, port=%s\n", fd, ip, port);
-    mensagens(fd, SAFE, ip, port);
-    printf("[LOG] ✅ Operação de entry concluída com sucesso.\n");
 }
 /*
  * testa_formato_porto - Verifica se a string fornecida representa uma porta TCP válida.
@@ -442,15 +451,15 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
     
     if (error) {
         printf("Erro: formato do IP ou da porta está incorreto\n");
-        return 1;
+        return -1;
     }
     if (strcmp(connectIP, "0.0.0.0") == 0) {
-        return 1; 
+        return -1; 
     }
 
     if (no->id.fd != -1) {
         printf("Já está conectado a um servidor. Abortando conexão direta.\n");
-        return 1;
+        return -1;
     }
 
     int errcode, n;
@@ -458,7 +467,6 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
         perror("Erro ao criar socket");
-        exit(1);
     }
     
     memset(&hints, 0, sizeof(hints));
@@ -468,27 +476,29 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
     errcode = getaddrinfo(connectIP, connectTCP, &hints, &res);
     if (errcode != 0) {
         fprintf(stderr, "Erro no getaddrinfo: %s\n", gai_strerror(errcode));
-        return 1;
+        return -1;
     }
     
     n = connect(fd, res->ai_addr, res->ai_addrlen);
     if (n == -1) {
         perror("Erro ao conectar");
-        exit(1);
+        return -1;
     }
 
     printf("Conectado a %s:%s no descritor de arquivo %d.\n", connectIP, connectTCP, fd);
     
     atualiza_viz_externo(fd, connectIP, connectTCP, no);
+    atualiza_viz_interno(fd, connectIP, connectTCP, no);
 
     printf("Vizinho externo atualizado para %s:%s.\n", connectIP, connectTCP);
     printf("Meu nó = %s %s", no->id.tcp, no->id.ip);
-    sleep(5);  // Espera 2 segundos para visualizar a saída no terminal
 
     FD_SET(fd, master_set);
     if (fd > *max_fd) *max_fd = fd;
 
     mensagens(fd, ENTRY, no->id.ip, no->id.tcp);
+    recebendo_safe(no, -2, no->id.ip, no->id.tcp);
+
     return 0; 
 }
 
