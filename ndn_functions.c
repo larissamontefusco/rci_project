@@ -80,11 +80,12 @@
  * @param no Estrutura do nó a ser atualizada.
  */
 
-void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO no){
-    no.id.fd = fd;
-    strcpy(no.id.ip,ip); 
-    strcpy(no.id.tcp,port); 
+ void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO* no) {
+    no->id.fd = fd;
+    strcpy(no->id.ip, ip);
+    strcpy(no->id.tcp, port);
 }
+
 
 /**
  * @brief Atualiza as informações do nó salvo.
@@ -95,14 +96,14 @@ void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO no){
  * @param port Porta TCP do nó salvo.
  */
 
- void recebendo_safe(INFO_NO no, ESTADO_FD fd, char* ip, char* port) {
+ void recebendo_safe(INFO_NO *no, ESTADO_FD fd, char* ip, char* port) {
     printf("[LOG] Recebendo safe: fd=%d, ip=%s, port=%s\n", fd, ip, port);
     
-    no.no_salv.fd = fd;
-    strcpy(no.no_salv.ip, ip);
-    strcpy(no.no_salv.tcp, port);
+    no->no_salv.fd = fd;
+    strcpy(no->no_salv.ip, ip);
+    strcpy(no->no_salv.tcp, port);
     
-    printf("[LOG] Estado salvo: fd=%d, ip=%s, port=%s\n", no.no_salv.fd, no.no_salv.ip, no.no_salv.tcp);
+    printf("[LOG] Estado salvo: fd=%d, ip=%s, port=%s\n", no->no_salv.fd, no->no_salv.ip, no->no_salv.tcp);
     printf("[LOG] ✅ Operação de safe concluída com sucesso.\n");
 }
 
@@ -121,11 +122,10 @@ void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO no){
     
     if (no->id.fd == SEM_CONEXAO) { // Primeira conexão, atualizar vizinho externo
         printf("[LOG] Primeira conexão detectada. Atualizando vizinho externo.\n");
-        atualiza_viz_externo(fd, ip, port, *no);
-        recebendo_safe(*no, PROPRIO_NO, no->id.ip, no->id.tcp);
-        printf("[LOG] Vizinho externo atualizado com sucesso.\n");
+        atualiza_viz_externo(fd, ip, port, no);
+        recebendo_safe(no, PROPRIO_NO, no->id.ip, no->id.tcp);
+        printf("[LOG] ✅ Vizinho externo atualizado com sucesso.\n");
     } else {
-        printf("[LOG] Criando novo vizinho interno.\n");
         INFO_NO novo_ext; // Criar estrutura na stack, sem malloc
         novo_ext.id.fd = fd;
         strcpy(novo_ext.id.ip, ip);
@@ -144,11 +144,11 @@ void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO no){
         }
 
         if (i == n_max_internos) {
-            printf("[ERRO] Número máximo de vizinhos internos atingido!\n");
+            printf("[ERRO] ❌ Número máximo de vizinhos internos atingido!\n");
             return;
         }
     }
-    printf("[LOG] Enviando mensagem SAFE para fd=%d, ip=%s, port=%s\n", fd, ip, port);
+    printf("[LOG] 📩 Enviando mensagem SAFE para fd=%d, ip=%s, port=%s\n", fd, ip, port);
     mensagens(fd, SAFE, ip, port);
     printf("[LOG] ✅ Operação de entry concluída com sucesso.\n");
 }
@@ -264,38 +264,26 @@ int join(char *rede_id, INFO_NO *no, char *regIP, char *regUDP) {
     return 0;  
 }
 
-void show_topology(INFO_NO no) {
+void show_topology(INFO_NO *no) {
 
     printf("========================================\n");
     
-    if (no.id.fd != SEM_CONEXAO) {
-        printf("🔗 Vizinho Externo: %s:%s\n\n", no.no_ext.ip, no.no_ext.tcp);
+    if (no->id.fd != SEM_CONEXAO) {
+        printf("🔗 Vizinho Externo: %s:%s\n\n", no->no_ext.ip, no->no_ext.tcp);
     } else {
         printf("[INFO] Atualmente sem vizinho externo.\n\n");
     }
 
-    if (no.no_salv.fd != SEM_CONEXAO) {
-        printf("🛡️  Vizinho de Salvaguarda: %s:%s\n\n", no.no_salv.ip, no.no_salv.tcp);
+    if (no->no_salv.fd != SEM_CONEXAO) {
+        printf("🛡️  Vizinho de Salvaguarda: %s:%s\n\n", no->no_salv.ip, no->no_salv.tcp);
     } else {
         printf("[INFO] Atualmente sem vizinho de salvaguarda.\n\n");
     }
-
-    /*if (head == NULL) {
-        printf("[INFO] Atualmente sem vizinhos internos.\n\n");
-    } else {  
-        printf("📡 Vizinhos Internos:\n");
-        while (head != NULL) {
-            printf("   ➜ %s:%s\n", head->ip, head->port);
-            head = head->next;
-        } 
-        printf("\n");
-    }*/
-
+    
     printf("========================================\n\n");
 }
 
-
-int direct_join(char *rede_id, INFO_NO no, char *connectIP, char *connectTCP, fd_set *master_set, int *max_fd) {
+int direct_join(char *rede_id, INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_set, int *max_fd) {
     
     printf("direct_join foi chamada com rede_id=%s, IP=%s, Port=%s\n", 
         rede_id, connectIP, connectTCP);
@@ -304,15 +292,15 @@ int direct_join(char *rede_id, INFO_NO no, char *connectIP, char *connectTCP, fd
     error = testa_formato_ip(connectIP);
     error = testa_formato_porto(connectTCP);
     
-    if (error){
-        printf("Erro, formato do IP ou do porto não corresponde");
+    if (error) {
+        printf("Erro, formato do IP ou do porto não corresponde\n");
         return 1;
     }
     if (strcmp(connectIP, "0.0.0.0") == 0) {
         return 1; 
     }
 
-    if (no.id.fd != SEM_CONEXAO) {
+    if (no->id.fd != SEM_CONEXAO) {
         printf("Already connected to a server. Aborting direct join.\n");
         return 1;
     }
@@ -339,17 +327,16 @@ int direct_join(char *rede_id, INFO_NO no, char *connectIP, char *connectTCP, fd
     if (n == -1) {
         perror("connect");
         exit(1);
-        return 1;
     }
 
     printf("Connected to %s:%s on FD %d.\n", connectIP, connectTCP, fd);
-    atualiza_viz_externo(fd, connectIP, connectTCP, no);
+    atualiza_viz_externo(fd, connectIP, connectTCP, no);  // Passando ponteiro corretamente
     printf("Updated external neighbour to %s:%s.\n", connectIP, connectTCP);
 
     FD_SET(fd, master_set);
     if (fd > *max_fd) *max_fd = fd;
 
-    mensagens(fd, ENTRY, no.id.ip, no.id.tcp);
+    mensagens(fd, ENTRY, no->id.ip, no->id.tcp);
     return 0; 
 }
 

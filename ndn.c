@@ -35,11 +35,7 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
     
     char words[10][100] = {""};
     parse_buffer(buffer, tamanho_buffer, words);
-    printf("buffer = %s aaaa\n", buffer);
-    printf("fd = %d\n", fd);
     if (fd == STDIN_FILENO) {
-        printf("Entrou no if (fd == STDIN_FILENO)\n");
-        printf("words[0] = '%s'\n", words[0]);
         if (strcmp(words[0], "join") == 0 || strcmp(words[0], "j") == 0) {
             printf("network = %s\n", words[1]);
             return 0;
@@ -48,14 +44,14 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
             printf("Network: %s\n", words[2]);
             printf("IP: %s\n", words[3]);
             printf("Porta: %s\n", words[4]);
-            direct_join(words[2], *no, words[3], words[4], master_set, &max_fd);
+            direct_join(words[2], no, words[3], words[4], master_set, &max_fd);
             return 0;
         } 
         else if(strcmp("dj", words[0]) == 0){
             printf("Network: %s\n", words[1]);
             printf("IP: %s\n", words[2]);
             printf("Porta: %s\n", words[3]);
-            direct_join(words[1], *no, words[2], words[3], master_set, &max_fd);
+            direct_join(words[1], no, words[2], words[3], master_set, &max_fd);
             return 0;
         }
         else if (strcmp(words[0], "create") == 0 || strcmp(words[0], "c") == 0) {
@@ -72,12 +68,12 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
             return 0;
         }
         else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "topology") == 0) {
-            show_topology(*no);
+            show_topology(no);
             printf("show topology\n");
             return 0;
         }
         else if (strcmp(words[0], "st") == 0) {
-            show_topology(*no);
+            show_topology(no);
             printf("show topology\n");
             return 0;
         }
@@ -111,11 +107,11 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
             return 0;
         }
         else if(strcmp("SAFE", words[0]) == 0){
-            recebendo_safe(*no, fd, words[1],words[2]);
+            recebendo_safe(no, fd, words[1],words[2]);
             return 0;
         }
         else{
-            printf("Comando não encontrado. Tente novamente.");
+            printf("Comando não encontrado ❌. Tente novamente.\n");
             return 0;
         }
     }  
