@@ -19,7 +19,6 @@
 fd_set* master_set; // ponteiro para o master_fds
 int max_fd;
 
-
 /*
  * processa_comandos - Processa comandos digitados pelo usuário e executa as ações correspondentes.
  *
@@ -31,7 +30,7 @@ int max_fd;
  * verifica qual comando foi inserido para executar a ação apropriada.
  */
 
-void processa_comandos(char *buffer, int tamanho_buffer, INFO_NO *no) {
+int processa_comandos(char *buffer, int tamanho_buffer, INFO_NO *no) {
     system("clear");
     
     char words[10][100] = {""};
@@ -40,55 +39,73 @@ void processa_comandos(char *buffer, int tamanho_buffer, INFO_NO *no) {
     if (strcmp(words[0], "join") == 0 || strcmp(words[0], "j") == 0) {
         printf("network = %s\n", words[1]);
         //join();
+        return 0;
     } 
     else if (strcmp(words[0], "direct") == 0 && strcmp(words[1], "join") == 0) {
         printf("Network: %s\n", words[2]);
         printf("IP: %s\n", words[3]);
         printf("Porta: %s\n", words[4]);
         direct_join(words[2], *no, words[3], words[4], master_set, &max_fd);
+        return 0;
     } 
     else if(strcmp("dj", words[0]) == 0){
         printf("Network: %s\n", words[1]);
         printf("IP: %s\n", words[2]);
         printf("Porta: %s\n", words[3]);
         direct_join(words[1], *no, words[2], words[3], master_set, &max_fd);
+        return 0;
     }
     else if (strcmp(words[0], "create") == 0 || strcmp(words[0], "c") == 0) {
         printf("Comando Create\n");
         create(words[1], no);
+        return 0;
     }
     else if (strcmp(words[0], "delete") == 0 || strcmp(words[0], "dl") == 0) {
         printf("Comando delete\n");
+        return 0;
     }
     else if (strcmp(words[0], "retrieve") == 0 || strcmp(words[0], "r") == 0) {
         printf("Comando retrieve\n");
+        return 0;
     }
     else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "topology") == 0) {
         show_topology(*no);
         printf("show topology\n");
+        return 0;
     }
     else if (strcmp(words[0], "st") == 0) {
         show_topology(*no);
         printf("show topology\n");
+        return 0;
     }
     else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "names") == 0) {
         printf("show names\n");
+        return 0;
     }
     else if (strcmp(words[0], "sn") == 0) {
         printf("show names\n");
+        return 0;
     }
     else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "interest") == 0 && strcmp(words[2], "table") == 0) {
         printf("Comando show interest table\n");
+        return 0;
     }
     else if (strcmp(words[0], "si") == 0) {
         printf("show interest table\n");
+        return 0;
     }
     else if (strcmp(words[0], "leave") == 0 || strcmp(words[0], "l") == 0) {
         printf("Comando Leave\n");
+        return 0;
     }
     else if (strcmp(words[0], "exit") == 0 || strcmp(words[0], "x") == 0) {
         printf("Comando Exit\n");
+        return 1;
     }
+    else {
+        printf("Comando inválido! Por favor, tente novamente.\n");
+        return 0;
+    }    
 }
 
 
@@ -131,6 +148,7 @@ int main(int argc, char** argv) {
 
     struct addrinfo hints, *res;
     int fd, new_fd, counter;
+    int finalizar_programa = 0;
     fd_set master_fds, read_fds;
     
     master_set = &master_fds;
@@ -170,7 +188,10 @@ int main(int argc, char** argv) {
 
 
     while (1) {
-        
+        if (finalizar_programa) {
+            printf("Obrigado por utilizar nosso sistema! Até a próxima!\n");
+            break;
+        }
         read_fds = master_fds;
         
                 
@@ -196,7 +217,7 @@ int main(int argc, char** argv) {
                 }
                 else if (i == STDIN_FILENO) {
                     fgets(buffer, TAMANHO_BUFFER, stdin);
-                    processa_comandos(buffer, TAMANHO_BUFFER, &no);
+                    finalizar_programa = processa_comandos(buffer, TAMANHO_BUFFER, &no);
                 } 
                 else {
                     int n = read(i, buffer, TAMANHO_BUFFER);
@@ -210,7 +231,7 @@ int main(int argc, char** argv) {
                             FD_CLR(i, &master_fds); 
                         } 
                     else {
-                        processa_comandos(buffer, TAMANHO_BUFFER, &no);
+                        finalizar_programa = processa_comandos(buffer, TAMANHO_BUFFER, &no);
                     }
                 }
             }
