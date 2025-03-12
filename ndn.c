@@ -114,10 +114,13 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
 
 
 int main(int argc, char** argv) {   
-    if (argc != 4 && argc != 6) {
-        return 1;
+    // Testa se os parametros dados na linha de comando estão correctos
+    if (testa_invocacao_programa(argc,argv)) 
+    {
+        printf("Erro na invocação do programa!");
+        exit(1);
     }
-
+    
     INFO_NO no;
     inicializar_no(&no);
     REDE rede_;
@@ -126,26 +129,12 @@ int main(int argc, char** argv) {
     char regIP[tamanho_ip] = "193.136.138.142";
     char regUDP[tamanho_porto] = "59000";
 
-    int error = testa_formato_ip(argv[2]);
-    error = testa_formato_porto(argv[3]);
-    
-    if (error) {
-        printf("Formato de inputs inválido!\n");
-        return 1;
-    }
-    
     strcpy(no.id.ip, argv[2]);
     strcpy(no.id.tcp, argv[3]);
 
     if (argc == 6) {
         strcpy(regIP, argv[4]);
         strcpy(regUDP, argv[5]);
-        error = testa_formato_ip(argv[4]);
-        error = testa_formato_porto(argv[5]);
-        if (error) {
-            printf("Formato de inputs inválido!\n");
-            return 1;
-        }
     }
 
     struct addrinfo hints, *res;

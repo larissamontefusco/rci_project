@@ -1,5 +1,5 @@
-#define _POSIX_C_SOURCE 200112L //remove os erros bruh
-
+#define _POSIX_C_SOURCE 200112L
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +18,34 @@
 #define OBJECT 3
 #define NOOBJECT 4
 
+
+bool testa_invocacao_programa(int argc, char** argv)
+{
+    if (argc != 4 && argc != 6) 
+    {
+        printf("\n\tErro no número de argumentos!\n"); 
+        return true;
+    }
+
+    int error = 0;
+    error = testa_formato_ip(argv[2]);
+    printf("\nerror_ip = %d\n", error);
+    if (error) 
+    {
+        printf("\nFormato de IP inválido!\n");
+        return true;
+    }
+
+    error = testa_formato_porto(argv[3]);
+    printf("\nerror_porto = %d\n", error);
+    if (error) 
+    {
+        printf("\nFormato do porto TCP inválido!\n");
+        return true;
+    }
+
+return false;
+}
 
 
 void inicializar_no(INFO_NO *no) {
