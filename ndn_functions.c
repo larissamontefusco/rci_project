@@ -601,6 +601,17 @@ void parse_buffer(char *buffer, int tamanho_buffer, char words[10][100]) {
     }
 }
 
+// Funções para gerenciar o cache
+/**
+ * @brief Armazena um objeto no cache.
+ * 
+ * A função verifica se há espaço disponível no cache e armazena o objeto, caso contrário, retorna um erro.
+ * 
+ * @param name Nome do objeto a ser armazenado.
+ * @param no Ponteiro para a estrutura INFO_NO que contém o cache.
+ * @return 0 se o objeto for armazenado com sucesso, 1 caso contrário.
+ */
+
 int create(char *name, INFO_NO *no) {
     if (strlen(name) >= tamanho_max_obj) {
         printf("Erro: Nome muito grande.\n");
@@ -617,5 +628,28 @@ int create(char *name, INFO_NO *no) {
     }
 
     printf("Erro: Cache cheio.\n");
+    return 1; 
+}
+
+/**
+ * @brief Remove um objeto do cache.
+ * 
+ * A função busca o objeto no cache e o remove caso ele seja encontrado. Se o objeto não existir, retorna um erro.
+ * 
+ * @param name Nome do objeto a ser removido.
+ * @param no Ponteiro para a estrutura INFO_NO que contém o cache.
+ * @return 0 se o objeto for removido com sucesso, 1 caso contrário.
+ */
+
+int delete(char *name, INFO_NO *no) {
+    for (int i = 0; i < n_max_obj; i++) {
+        if (strcmp(no->cache[i], name) == 0) { // Encontrou o objeto
+            no->cache[i][0] = '\0'; // Marca como vazio
+            printf("[LOG] ❌ Objeto '%s' removido da posição %d do cache com sucesso.\n", name, i);
+            return 0;
+        }
+    }
+    
+    printf("Erro: Objeto '%s' não encontrado no cache.\n", name);
     return 1; 
 }

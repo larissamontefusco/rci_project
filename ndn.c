@@ -56,7 +56,7 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
             return 0;
         }
         else if (strcmp(words[0], "delete") == 0 || strcmp(words[0], "dl") == 0) {
-            printf("Comando delete\n");
+            delete(words[1], no);
             return 0;
         }
         else if (strcmp(words[0], "retrieve") == 0 || strcmp(words[0], "r") == 0) {
@@ -163,9 +163,11 @@ int main(int argc, char** argv) {
     printf("========================================\n\n");
     
     printf("📌 COMANDOS DISPONÍVEIS:\n");
-    printf("➡  direct join (dj) NET IP PORT  - Conectar a um nó diretamente\n");
+    printf("➡  direct join (dj) IP PORT  - Conectar a um nó diretamente\n");
+    printf("➡  join (j) NET - Entrada do nó à rede net\n");
     printf("➡  show topology (st)        - Exibir a topologia da rede\n");
-    printf("➡  create (c) NAME          -  Criação de um objeto com nome NAME (tamanho máximo 100).\n\n");
+    printf("➡  create (c) NAME          -  Criação de um objeto com nome NAME (tamanho máximo 100).\n");
+    printf("➡  delete (dl) NAME          -  Exclusão de um objeto com nome NAME (tamanho máximo 100).\n\n");
     printf("➡  exit (x)                  - Sair do programa\n\n");
     
     printf("========================================\n");
