@@ -370,9 +370,10 @@ void show_topology(INFO_NO *no) {
  * @return int   Retorna 0 em caso de sucesso, ou -1 em caso de erro.
  */
 
-int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, int *max_fd) {
+ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, int *max_fd) {
     printf("[INFO] Iniciando processo de entrada na rede %s...\n", net);
     
+    // Verifica se o formato da rede está correto
     int error = testa_formato_rede(net);
     if (error) {
         printf("[ERRO] Formato da rede %s não está correto. (Deve estar entre 000-999)\n", net);
@@ -385,9 +386,10 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, 
     ssize_t n;
     char msg[128]="NODES ", msg_2[128]="REG ", buffer[128 + 1];
     char str1[9] ="", str2[3] ="", str3[tamanho_ip]="", str4[tamanho_porto]="";
+    
+    // Concatena o nome da rede na mensagem de solicitação de nós
     strcpy(msg, (strcat(msg, net)));
     
-
     // Criar socket UDP
     printf("[INFO] Criando socket UDP...\n");
     fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -396,7 +398,7 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, 
         return -1;
     }
 
-    // Configuração da estrutura hints
+    // Configuração da estrutura hints para obtenção de endereço do servidor
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET; // IPv4
     hints.ai_socktype = SOCK_DGRAM; // UDP
@@ -412,7 +414,7 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, 
 
     printf("[INFO] Mensagem a ser enviada: %s\n", msg);
 
-    // Enviar mensagem
+    // Enviar mensagem de solicitação de nós ao servidor
     printf("[INFO] Enviando mensagem ao servidor...\n");
     n = sendto(fd, msg, strlen(msg), 0, res->ai_addr, res->ai_addrlen);
     if (n == -1) {
@@ -423,7 +425,7 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, 
     }
     printf("[SUCESSO] Mensagem enviada com sucesso.\n");
 
-    // Receber resposta
+    // Receber resposta do servidor
     struct sockaddr addr;
     socklen_t addrlen = sizeof(addr);
     printf("[INFO] Aguardando resposta do servidor...\n");
@@ -437,13 +439,13 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, 
     buffer[n] = '\0';
     printf("[SUCESSO] Resposta do servidor recebida: %s\n", buffer);
     
-    //Lê o primeiro nó da rede, se houver, e liga-se a este
-    if((sscanf(buffer, "%s %s %s %s", str1, str2, str3, str4))==4)
+    // Lê o primeiro nó da rede, se houver, e tenta se conectar a ele
+    if((sscanf(buffer, "%s %s %s %s", str1, str2, str3, str4)) == 4)
     {
         strcpy(no_a_ligar.ip, str3);
         strcpy(no_a_ligar.tcp, str4); 
 
-        //Liga-se ao nó escolhido
+        // Liga-se ao nó escolhido
         if(direct_join(no, no_a_ligar.ip, no_a_ligar.tcp, master_set, max_fd))
         {
             printf("Correu mal o direct join!");
@@ -453,7 +455,7 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, 
         }    
     }
     
-    //Compõe a mensagem ao servidor
+    // Compõe a mensagem de registro ao servidor
     strcpy(msg_2, (strcat(msg_2, net)));
     strcpy(msg_2, (strcat(msg_2, " ")));
     strcpy(msg_2, (strcat(msg_2, no->id.ip)));
@@ -461,6 +463,7 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, 
     strcpy(msg_2, (strcat(msg_2, no->id.tcp)));
     printf("[INFO] Mensagem 2 a ser enviada: %s\n\n", msg_2);
 
+    // Enviar mensagem de registro ao servidor
     n = sendto(fd, msg_2, strlen(msg_2), 0, res->ai_addr, res->ai_addrlen);
     if (n == -1) {
         perror("[ERRO] Falha ao enviar mensagem");
@@ -470,7 +473,7 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, 
     }
     printf("[SUCESSO] Mensagem enviada com sucesso.\n");
 
-    
+    // Aguardar resposta de confirmação do servidor
     printf("[INFO] Aguardando resposta do servidor...\n");
     n = recvfrom(fd, buffer, 128, 0, &addr, &addrlen);
     if (n == -1) {
@@ -482,14 +485,13 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, 
     buffer[n] = '\0';
     printf("[SUCESSO] Resposta do servidor recebida: %s\n", buffer);
     
-
-
     // Liberar recursos
     freeaddrinfo(res);
     close(fd);
     printf("[INFO] Processo de entrada na rede concluído com sucesso.\n");
     return 0;
 }
+
 
 
 int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_set, int *max_fd) {
