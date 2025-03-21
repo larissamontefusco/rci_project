@@ -653,3 +653,25 @@ int delete(char *name, INFO_NO *no) {
     printf("Erro: Objeto '%s' não encontrado no cache.\n", name);
     return 1; 
 }
+
+/**
+ * @brief Exibe todos os objetos armazenados no cache.
+ * 
+ * A função percorre o cache e exibe todos os nomes armazenados.
+ * 
+ * @param no Ponteiro para a estrutura INFO_NO que contém o cache.
+ */
+
+void show_names(INFO_NO *no) {
+    printf("[LOG] 📜 Objetos armazenados no cache:\n");
+    int found = 0;
+    for (int i = 0; i < n_max_obj; i++) {
+        if (no->cache[i][0] != '\0') { // Se a posição não estiver vazia
+            printf("- %s\n", no->cache[i]);
+            found = 1;
+        }
+    }
+    if (!found) {
+        printf("(Nenhum objeto armazenado)\n");
+    }
+}
