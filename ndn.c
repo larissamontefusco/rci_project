@@ -169,6 +169,11 @@ int main(int argc, char** argv) {
     printf("➡  exit (x)                  - Sair do programa\n\n");
     
     printf("========================================\n");
+    
+    // Definindo um timeout para o select
+    struct timeval timeout;
+    timeout.tv_sec = 5;  // Segundos
+    timeout.tv_usec = 0; // Microssegundos
 
 
     while (1) {
@@ -179,7 +184,7 @@ int main(int argc, char** argv) {
         read_fds = master_fds;
         
                 
-        counter = select(max_fd + 1, &read_fds, NULL, NULL, NULL);
+        counter = select(max_fd + 1, &read_fds, NULL, NULL, &timeout);
         if (counter == -1) {
             perror("select");
             exit(1);

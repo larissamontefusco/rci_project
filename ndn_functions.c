@@ -372,7 +372,7 @@ void show_topology(INFO_NO *no) {
 
  int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, int *max_fd) {
     printf("[INFO] Iniciando processo de entrada na rede %s...\n", net);
-    
+
     // Verifica se o formato da rede está correto
     int error = testa_formato_rede(net);
     if (error) {
@@ -492,8 +492,6 @@ void show_topology(INFO_NO *no) {
     return 0;
 }
 
-
-
 int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_set, int *max_fd) {
     
     printf("direct_join foi chamada com IP=%s, Porta=%s\n", connectIP, connectTCP);
@@ -504,7 +502,7 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
         printf("Erro: formato do IP está incorreto\n");
         return -1;
     }
-    if (strcmp(connectIP, no->id.ip) && strcmp(connectTCP, no->id.tcp)){
+    if (!strcmp(connectIP, no->id.ip) && !strcmp(connectTCP, no->id.tcp)){
         printf("Erro: Se quiser utilizar o dj com o próprio nó, deves digitar dj 0.0.0.0\n");
         return -1;
     }
