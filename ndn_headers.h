@@ -60,8 +60,10 @@ int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, 
     char *connectPort, fd_set *fds, int *maxfd);
 void show_topology(INFO_NO *no);
 int create(char *name, INFO_NO *no);
+int delete(char *name, INFO_NO *no);
 void parse_buffer(char *buffer, int tamanho_buffer, char words[10][100]);
 void recebendo_safe(INFO_NO *no, int fd, char* ip, char* port);
 void recebendo_entry(INFO_NO* no, int fd, char* ip, char* port);
 void inicializar_no(INFO_NO *no);
 bool testa_invocacao_programa(int argc, char** argv);
+void show_names(INFO_NO *no);
