@@ -370,7 +370,7 @@ void show_topology(INFO_NO *no) {
  * @return int   Retorna 0 em caso de sucesso, ou -1 em caso de erro.
  */
 
- int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, int *max_fd) {
+int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, int *max_fd) {
     printf("[INFO] Iniciando processo de entrada na rede %s...\n", net);
     
     int error = testa_formato_rede(net);
@@ -383,7 +383,8 @@ void show_topology(INFO_NO *no) {
     ID_NO no_a_ligar;
     int fd, errcode;
     ssize_t n;
-    char msg[128]="NODES ", msg_2[128]="REG ", buffer[128 + 1], str1[tamanho_ip]="", str2[tamanho_porto]="";
+    char msg[128]="NODES ", msg_2[128]="REG ", buffer[128 + 1];
+    char str1[9] ="", str2[3] ="", str3[tamanho_ip]="", str4[tamanho_porto]="";
     strcpy(msg, (strcat(msg, net)));
     
 
@@ -436,19 +437,11 @@ void show_topology(INFO_NO *no) {
     buffer[n] = '\0';
     printf("[SUCESSO] Resposta do servidor recebida: %s\n", buffer);
     
-    //Lê "NODESLIST net"
-    if((sscanf(buffer, "%s %s", str1, str2))!=2)
-    {
-        perror("[ERRO] Falha ao receber resposta do servidor NODESLISTA net");
-        freeaddrinfo(res);
-        close(fd);
-        return -1;
-    }
     //Lê o primeiro nó da rede, se houver, e liga-se a este
-    if((sscanf(buffer, "%s %s", str1, str2))==2)
+    if((sscanf(buffer, "%s %s %s %s", str1, str2, str3, str4))==4)
     {
-        strcpy(no_a_ligar.ip, str1);
-        strcpy(no_a_ligar.tcp, str2); 
+        strcpy(no_a_ligar.ip, str3);
+        strcpy(no_a_ligar.tcp, str4); 
 
         //Liga-se ao nó escolhido
         if(direct_join(no, no_a_ligar.ip, no_a_ligar.tcp, master_set, max_fd))
@@ -461,12 +454,12 @@ void show_topology(INFO_NO *no) {
     }
     
     //Compõe a mensagem ao servidor
-        strcpy(msg_2, (strcat(msg_2, net)));
-        strcpy(msg_2, (strcat(msg_2, " ")));
-        strcpy(msg_2, (strcat(msg_2, no->id.ip)));
-        strcpy(msg_2, (strcat(msg_2, " ")));
-        strcpy(msg_2, (strcat(msg_2, no->id.tcp)));
-        printf("[INFO] Mensagem 2 a ser enviada: %s\n\n", msg_2);
+    strcpy(msg_2, (strcat(msg_2, net)));
+    strcpy(msg_2, (strcat(msg_2, " ")));
+    strcpy(msg_2, (strcat(msg_2, no->id.ip)));
+    strcpy(msg_2, (strcat(msg_2, " ")));
+    strcpy(msg_2, (strcat(msg_2, no->id.tcp)));
+    printf("[INFO] Mensagem 2 a ser enviada: %s\n\n", msg_2);
 
     n = sendto(fd, msg_2, strlen(msg_2), 0, res->ai_addr, res->ai_addrlen);
     if (n == -1) {
@@ -497,6 +490,7 @@ void show_topology(INFO_NO *no) {
     printf("[INFO] Processo de entrada na rede concluído com sucesso.\n");
     return 0;
 }
+
 
 int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_set, int *max_fd) {
     
