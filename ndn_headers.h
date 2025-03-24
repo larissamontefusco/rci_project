@@ -46,6 +46,7 @@ typedef struct info_no {
     ID_NO no_salv;                     // Nó de salvaguarda (backup)
     ID_NO no_int[n_max_internos];      // Lista de vizinhos internos
     char cache[n_max_obj][tamanho_max_obj]; // Cache de objetos armazenados
+    int num_objetos;
 } INFO_NO;
 
 
@@ -67,3 +68,4 @@ void recebendo_entry(INFO_NO* no, int fd, char* ip, char* port);
 void inicializar_no(INFO_NO *no);
 bool testa_invocacao_programa(int argc, char** argv);
 void show_names(INFO_NO *no);
+int retrieve(char *name, INFO_NO *no);

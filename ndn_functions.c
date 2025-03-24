@@ -64,6 +64,10 @@ void inicializar_no(INFO_NO *no) {
 
     // Limpa chaches
     memset(no->cache, 0, sizeof(no->cache));
+
+    // Numeros de objetos inicial é 0
+    no->num_objetos = 0;  
+
 }
 
 
@@ -616,17 +620,22 @@ int create(char *name, INFO_NO *no) {
         return 1;
     }
 
+    if (no->num_objetos >= n_max_obj) {
+        printf("Erro: Cache cheio.\n");
+        return -1;
+    }
+
     // Encontrar um espaço livre no cache
     for (int i = 0; i < n_max_obj; i++) {
         if (no->cache[i][0] == '\0') { // Se a posição estiver vazia
             strcpy(no->cache[i], name);
+            no->num_objetos++;  // Atualiza o contador
             printf("[LOG] ✅ Objeto '%s' armazenado na posição %d do cache com sucesso.\n", name, i);
             return 0;
         }
     }
-
     printf("Erro: Cache cheio.\n");
-    return 1; 
+    return -1; 
 }
 
 /**
@@ -643,13 +652,39 @@ int delete(char *name, INFO_NO *no) {
     for (int i = 0; i < n_max_obj; i++) {
         if (strcmp(no->cache[i], name) == 0) { // Encontrou o objeto
             no->cache[i][0] = '\0'; // Marca como vazio
+            no->num_objetos--; // Atualiza o contador
             printf("[LOG] ❌ Objeto '%s' removido da posição %d do cache com sucesso.\n", name, i);
             return 0;
         }
     }
-    
     printf("Erro: Objeto '%s' não encontrado no cache.\n", name);
-    return 1; 
+    return -1; 
+}
+
+
+/**
+ * @brief Pesquisa de um objeto do cache.
+ * 
+ * A função busca o objeto no cache e o remove caso ele seja encontrado. Se o objeto não existir, retorna um erro.
+ * 
+ * @param name Nome do objeto a ser removido.
+ * @param no Ponteiro para a estrutura INFO_NO que contém o cache.
+ * @return 0 se o objeto for removido com sucesso, 1 caso contrário.
+ */
+
+int retrieve(char *name, INFO_NO *no) {
+    if (no->num_objetos == 0){
+        printf("Não há nenhum objecto associado à este nó.\n");
+        return -1;
+    }
+    for (int i = 0; i < no->num_objetos; i++) {
+        if (no->cache[i][0] != '\0' && strcmp(no->cache[i], name) == 0) { // Encontrou o objeto
+            printf("[LOG] Objeto '%s' está na posição %d do cache com sucesso.\n", name, i);
+            return 0;
+        }
+    }
+    printf("Erro: Objeto '%s' não encontrado no cache.\n", name);
+    return -1;
 }
 
 /**
