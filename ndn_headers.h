@@ -10,9 +10,11 @@
 #define tamanho_ip 16
 #define tamanho_porto 6
 #define n_max_internos 50
+#define n_max_interfaces (n_max_internos + 1) // É o número de internos + externo
 #define n_max_obj 50
 #define tamanho_max_obj 100
 #define n_max_nos 100
+#define n_max_interests 100
 
 /******************* Estrutura para identificação de um nó *******************/
 /*
@@ -28,6 +30,19 @@ typedef struct no {
     char tcp[tamanho_porto]; // Porta TCP do nó
     int fd; // Descritor de arquivo do socket
 } ID_NO;
+
+
+/****************** Estrutura para armazenar interesses pendentes ******************/
+/*
+    INTEREST - Estrutura que contém as informações sobre os interesses
+    Campos:
+    name - Identificação dos objetos de interesse
+    interfaces - Armazena as interfaces que tem comunicação com o nó
+*/
+typedef struct {
+    char name[tamanho_max_obj];  
+    int interfaces[n_max_interfaces]; 
+} INTEREST;
 
 /****************** Estrutura para armazenar informações de um nó ******************/
 /*
@@ -46,8 +61,11 @@ typedef struct info_no {
     ID_NO no_salv;                     // Nó de salvaguarda (backup)
     ID_NO no_int[n_max_internos];      // Lista de vizinhos internos
     char cache[n_max_obj][tamanho_max_obj]; // Cache de objetos armazenados
-    int num_objetos;
+    int num_objetos; // Número de objetos
+    INTEREST interests[n_max_interests]; // Tabela de interesses pendentes
+    int num_interesses;                // Número atual de interesses ativos // Número de interesses
 } INFO_NO;
+
 
 
 // Funções para teste de formato:
@@ -57,8 +75,7 @@ int testa_formato_rede(char *net);
 
 // Funções da NDN
 int join(char *net, INFO_NO *no, char *regIP, char *regUDP, fd_set *master_set, int *max_fd);
-    int direct_join(INFO_NO *no, char *connectIP, 
-    char *connectPort, fd_set *fds, int *maxfd);
+int direct_join(INFO_NO *no, char *connectIP, char *connectPort, fd_set *fds, int *maxfd);
 void show_topology(INFO_NO *no);
 int create(char *name, INFO_NO *no);
 int delete(char *name, INFO_NO *no);
@@ -68,4 +85,5 @@ void recebendo_entry(INFO_NO* no, int fd, char* ip, char* port);
 void inicializar_no(INFO_NO *no);
 bool testa_invocacao_programa(int argc, char** argv);
 void show_names(INFO_NO *no);
+void show_interest_table(INFO_NO *no);
 int retrieve(char *name, INFO_NO *no);

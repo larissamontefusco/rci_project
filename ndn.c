@@ -80,7 +80,7 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
             return 0;
         }
         else if (strcmp(words[0], "show") == 0 && strcmp(words[1], "interest") == 0 && strcmp(words[2], "table") == 0) {
-            printf("Comando show interest table\n");
+            show_interest_table(no);
             return 0;
         }
         else if (strcmp(words[0], "si") == 0) {
@@ -166,7 +166,8 @@ int main(int argc, char** argv) {
     printf("➡  create (c) NAME          -  Criação de um objeto com nome NAME (tamanho máximo 100).\n");
     printf("➡  retrieve (r) NAME          -  Pesquisa do objeto com nome NAME (tamanho máximo 100).\n");
     printf("➡  delete (dl) NAME          -  Exclusão de um objeto com nome NAME (tamanho máximo 100).\n");
-    printf("➡  show names (sn)          -  Visualização dos nomes de todos os objetos guardados no nó.\n\n");
+    printf("➡  show names (sn)          -  Visualização dos nomes de todos os objetos guardados no nó.\n");
+    printf("➡  show interest table (si)   -  Visualização de todas as entradas da tabela de interesses pendentes.\n\n");
     printf("➡  exit (x)                  - Sair do programa\n\n");
     
     printf("========================================\n");

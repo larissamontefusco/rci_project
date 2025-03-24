@@ -65,9 +65,17 @@ void inicializar_no(INFO_NO *no) {
     // Limpa chaches
     memset(no->cache, 0, sizeof(no->cache));
 
-    // Numeros de objetos inicial é 0
-    no->num_objetos = 0;  
+    no->num_objetos = 0;  // Numeros de objetos inicial é 0
 
+    // Inicializa a tabela de interesses pendentes
+    for (int i = 0; i < n_max_interests; i++) {
+        no->interests[i].name[0] = '\0';  // Define como string vazia
+        // Inicializa todas as interfaces como "fechadas" (por exemplo, -1)
+        for (int j = 0; j < (2 + n_max_internos); j++) {
+            no->interests[i].interfaces[j] = -1;
+        }
+    }
+    printf("[LOG] ✅ Nó inicializado com sucesso!\n");
 }
 
 
@@ -363,6 +371,42 @@ void show_topology(INFO_NO *no) {
     
     printf("========================================\n\n");
 }
+
+
+/****************** Função para exibir a tabela de interesses pendentes ******************/
+/*
+ * show_interest_table - Exibe a tabela de interesses pendentes de um nó.
+ *
+ * Parâmetros:
+ *   no - Ponteiro para a estrutura INFO_NO do nó que deseja exibir os interesses.
+ *
+ * Retorno:
+ *   Nenhum. Apenas imprime a tabela na tela.
+ */
+
+void show_interest_table(INFO_NO *no) {
+    printf("[LOG] 📌 Tabela de Interesses Pendentes:\n");
+    
+    if (no->num_interesses == 0) {
+        printf("(Nenhum interesse pendente.)\n");
+        return;
+    }
+
+    for (int i = 0; i < no->num_interesses; i++) {
+        printf("- Objeto: %s | Interfaces: ", no->interests[i].name);
+        for (int j = 0; j < n_max_interfaces; j++) {
+            if (no->interests[i].interfaces[j] == 1) {
+                printf("[Espera] ");
+            } else if (no->interests[i].interfaces[j] == 2) {
+                printf("[Resposta] ");
+            } else if (no->interests[i].interfaces[j] == 3) {
+                printf("[Fechado] ");
+            }
+        }
+        printf("\n");
+    }
+}
+
 
 /**
  * @brief Entra em uma rede especificada enviando uma solicitação para o servidor.
