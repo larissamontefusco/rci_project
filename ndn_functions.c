@@ -276,6 +276,106 @@ void recebendo_interesse(INFO_NO *no, char *objeto, int origem_interface) {
 }
 
 
+void recebendo_objeto(INFO_NO *no, char *objeto, int origem_interface) {
+    printf("[LOG] 📦 Mensagem de objeto recebida: '%s' pela interface %d\n", objeto, origem_interface);
+
+    int indice_interesse = -1;
+
+    // Verifica se o objeto está na tabela de interesses pendentes
+    for (int i = 0; i < no->num_interesses; i++) {
+        if (strcmp(no->interests[i].name, objeto) == 0) {
+            indice_interesse = i;
+            break;
+        }
+    }
+
+    if (indice_interesse == -1) {
+        printf("[LOG] ❌ Objeto '%s' não estava na tabela de interesses. Ignorando mensagem.\n", objeto);
+        return;
+    }
+
+    // Reencaminha a mensagem para todas as interfaces no estado de resposta
+    printf("[LOG] 🔀 Reencaminhando objeto '%s' para as interfaces que aguardavam resposta.\n", objeto);
+    for (int i = 0; i < n_max_internos; i++) {
+        if (no->interests[indice_interesse].interfaces[i] == 1) {
+            mensagens(no->no_int[i].fd, OBJECT, objeto, no->no_int[i].tcp);
+        }
+    }
+
+    // Remove a entrada da tabela de interesses pendentes
+    printf("[LOG] 🗑️ Removendo '%s' da tabela de interesses pendentes.\n", objeto);
+    no->num_interesses--;
+    for (int i = indice_interesse; i < no->num_interesses; i++) {
+        no->interests[i] = no->interests[i + 1];
+    }
+
+    // Adiciona ao cache (com política FIFO ou LRU se necessário)
+    if (no->num_objetos < n_max_obj) {
+        strcpy(no->cache[no->num_objetos], objeto);
+        no->num_objetos++;
+    } else {
+        printf("[LOG] ⚠️ Cache cheio! Aplicando política de substituição (FIFO)...\n");
+        // Remove o objeto mais antigo e adiciona o novo
+        for (int i = 1; i < n_max_obj; i++) {
+            strcpy(no->cache[i - 1], no->cache[i]);
+        }
+        strcpy(no->cache[n_max_obj - 1], objeto);
+    }
+
+    printf("[LOG] ✅ Objeto '%s' armazenado no cache.\n", objeto);
+}
+
+
+void recebendo_noobjeto(INFO_NO *no, char *objeto, int origem_interface) {
+    printf("[LOG] 🚫 Mensagem de ausência recebida para '%s' pela interface %d\n", objeto, origem_interface);
+
+    int indice_interesse = -1;
+
+    // Verifica se o objeto está na tabela de interesses pendentes
+    for (int i = 0; i < no->num_interesses; i++) {
+        if (strcmp(no->interests[i].name, objeto) == 0) {
+            indice_interesse = i;
+            break;
+        }
+    }
+
+    if (indice_interesse == -1) {
+        printf("[LOG] ❌ Objeto '%s' não estava na tabela de interesses. Ignorando mensagem.\n", objeto);
+        return;
+    }
+
+    // Marca a interface como fechada
+    printf("[LOG] 🔒 Fechando interface %d para '%s'.\n", origem_interface, objeto);
+    no->interests[indice_interesse].interfaces[origem_interface] = 0;
+
+    // Verifica se ainda há alguma interface no estado de espera
+    int alguma_em_espera = 0;
+    for (int i = 0; i < n_max_internos; i++) {
+        if (no->interests[indice_interesse].interfaces[i] == 1) {
+            alguma_em_espera = 1;
+            break;
+        }
+    }
+
+    // Se não há interfaces esperando, envia NOOBJECT para todas que estavam em resposta
+    if (!alguma_em_espera) {
+        printf("[LOG] ❌ Nenhuma interface em estado de espera. Enviando NOOBJECT para as interfaces que aguardavam resposta.\n");
+        for (int i = 0; i < n_max_internos; i++) {
+            if (no->interests[indice_interesse].interfaces[i] == 1) {
+                mensagens(no->no_int[i].fd, NOOBJECT, objeto, no->no_int[i].tcp);
+            }
+        }
+
+        // Remove a entrada da tabela de interesses pendentes
+        printf("[LOG] 🗑️ Removendo '%s' da tabela de interesses pendentes.\n", objeto);
+        no->num_interesses--;
+        for (int i = indice_interesse; i < no->num_interesses; i++) {
+            no->interests[i] = no->interests[i + 1];
+        }
+    }
+}
+
+
 /**
  * @brief Atualiza as informações do nó salvo.
  * 

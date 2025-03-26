@@ -123,7 +123,42 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
         
             recebendo_interesse(no, words[1], origem_interface);
             return 0;
-        }        
+        }   
+        else if(strcmp("OBJECT", words[0]) == 0){
+            int origem_interface = -1;
+            for (int i = 0; i < n_max_internos; i++) {
+                if (no->no_int[i].fd == fd) {
+                    origem_interface = i;
+                    break;
+                }
+            }
+        
+            if (origem_interface == -1) {
+                printf("⚠️ Erro: Interface de origem não encontrada para fd=%d\n", fd);
+                return 0;
+            }
+        
+            recebendo_objeto(no, words[1], origem_interface);
+            return 0;
+        }
+        else if(strcmp("NOOBJECT", words[0]) == 0){
+            int origem_interface = -1;
+            for (int i = 0; i < n_max_internos; i++) {
+                if (no->no_int[i].fd == fd) {
+                    origem_interface = i;
+                    break;
+                }
+            }
+        
+            if (origem_interface == -1) {
+                printf("⚠️ Erro: Interface de origem não encontrada para fd=%d\n", fd);
+                return 0;
+            }
+        
+            recebendo_noobjeto(no, words[1], origem_interface);
+            return 0;
+        }
+             
         else{
             printf("Comando não encontrado ❌. Tente novamente.\n");
             return 0;

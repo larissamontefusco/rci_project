@@ -91,6 +91,8 @@ void parse_buffer(char *buffer, int tamanho_buffer, char words[10][100]);
 void recebendo_safe(INFO_NO *no, int fd, char* ip, char* port);
 void recebendo_entry(INFO_NO* no, int fd, char* ip, char* port);
 void recebendo_interesse(INFO_NO *no, char *objeto, int origem_interface);
+void recebendo_objeto(INFO_NO *no, char *objeto, int origem_interface);
+void recebendo_noobjeto(INFO_NO *no, char *objeto, int origem_interface);
 void inicializar_no(INFO_NO *no);
 bool testa_invocacao_programa(int argc, char** argv);
 void show_names(INFO_NO *no);
