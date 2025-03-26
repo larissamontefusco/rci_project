@@ -64,9 +64,14 @@ typedef struct info_no {
     int num_objetos; // Número de objetos
     INTEREST interests[n_max_interests]; // Tabela de interesses pendentes
     int num_interesses;                // Número atual de interesses ativos // Número de interesses
+    INFO_NET net;
 } INFO_NO;
 
-
+typedef struct info_net {
+    char id;                         // Identificador da rede
+    char regIP;
+    char regUDP;
+} INFO_NET;
 
 // Funções para teste de formato:
 int testa_formato_ip(char* ip);
@@ -86,4 +91,5 @@ void inicializar_no(INFO_NO *no);
 bool testa_invocacao_programa(int argc, char** argv);
 void show_names(INFO_NO *no);
 void show_interest_table(INFO_NO *no);
+int leave(INFO_NO *no, fd_set *master_set, int *max_fd);
 int retrieve(char *name, INFO_NO *no);

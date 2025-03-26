@@ -88,7 +88,7 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
             return 0;
         }
         else if (strcmp(words[0], "leave") == 0 || strcmp(words[0], "l") == 0) {
-            printf("Comando Leave\n");
+            leave(no, master_set, &max_fd);
             return 0;
         }
         else if (strcmp(words[0], "exit") == 0 || strcmp(words[0], "x") == 0) {
@@ -168,6 +168,7 @@ int main(int argc, char** argv) {
     printf("➡  delete (dl) NAME          -  Exclusão de um objeto com nome NAME (tamanho máximo 100).\n");
     printf("➡  show names (sn)          -  Visualização dos nomes de todos os objetos guardados no nó.\n");
     printf("➡  show interest table (si)   -  Visualização de todas as entradas da tabela de interesses pendentes.\n\n");
+    printf("➡  leave (l)                  - Saída do nó da rede.\n\n");
     printf("➡  exit (x)                  - Sair do programa\n\n");
     
     printf("========================================\n");

@@ -75,6 +75,9 @@ void inicializar_no(INFO_NO *no) {
             no->interests[i].interfaces[j] = -1;
         }
     }
+    no->net.regUDP = '\0';
+    no->net.regIP = '\0';
+    no->net.id = '\0';   
     printf("[LOG] ✅ Nó inicializado com sucesso!\n");
 }
 
@@ -533,6 +536,11 @@ void show_interest_table(INFO_NO *no) {
     buffer[n] = '\0';
     printf("[SUCESSO] Resposta do servidor recebida: %s\n", buffer);
     
+    // Salvando as informações da NET no nó.
+    no->net.id = net;
+    no->net.regIP = regIP;
+    no->net.regUDP = regUDP;
+
     // Liberar recursos
     freeaddrinfo(res);
     close(fd);
@@ -612,6 +620,97 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
     recebendo_safe(no, -2, no->id.ip, no->id.tcp);
 
     return 0; 
+}
+
+/* LEAVE*/
+int leave(INFO_NO *no, fd_set *master_set, int *max_fd)
+{
+    printf("[INFO] Iniciando processo de saída na rede %s...\n", no->net.id);
+    
+    struct addrinfo hints, *res;
+    int fd, errcode;
+    ssize_t n;
+    char msg[128]="UNREG ", buffer[128 + 1], str1[20];
+
+    strcpy(msg, (strcat(msg, " ")));
+    strcpy(msg, (strcat(msg, no->id.ip)));
+    strcpy(msg, (strcat(msg, " ")));
+    strcpy(msg, (strcat(msg, no->id.tcp)));
+
+    printf("\n\tMensagem UNREG : %s", msg);
+    
+    // Criar socket UDP
+    printf("[INFO] Criando socket UDP...\n");
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd == -1) {
+        perror("[ERRO] Falha ao criar socket");
+        return -1;
+    }
+
+    // Configuração da estrutura hints
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET; // IPv4
+    hints.ai_socktype = SOCK_DGRAM; // UDP
+
+    // Obter endereço do servidor
+    printf("[INFO] Obtendo endereço do servidor %s:%s...\n", no->net.regIP, no->net.regUDP);
+    errcode = getaddrinfo(no->net.regIP, no->net.regUDP, &hints, &res);
+    if (errcode != 0) {
+        fprintf(stderr, "[ERRO] getaddrinfo: %s\n", gai_strerror(errcode));
+        close(fd);
+        return -1;
+    }
+
+    printf("[INFO] Mensagem a ser enviada: %s\n", msg);
+
+    // Enviar mensagem
+    printf("[INFO] Enviando mensagem ao servidor...\n");
+    n = sendto(fd, msg, strlen(msg), 0, res->ai_addr, res->ai_addrlen);
+    if (n == -1) {
+        perror("[ERRO] Falha ao enviar mensagem");
+        freeaddrinfo(res);
+        close(fd);
+        return -1;
+    }
+    printf("[SUCESSO] Mensagem enviada com sucesso.\n");
+
+    // Receber resposta
+    struct sockaddr addr;
+    socklen_t addrlen = sizeof(addr);
+    printf("[INFO] Aguardando resposta do servidor...\n");
+    n = recvfrom(fd, buffer, 128, 0, &addr, &addrlen);
+    if (n == -1) {
+        perror("[ERRO] Falha ao receber resposta do servidor");
+        freeaddrinfo(res);
+        close(fd);
+        return -1;
+    }
+    buffer[n] = '\0';
+    printf("[SUCESSO] Resposta do servidor recebida: %s\n", buffer);
+
+    //COnfirma se recebeu OKUNREG
+    if((sscanf(buffer, "%s", str1))==1)
+    {
+        if(strcmp(str1, "OKUNREG"))
+        {
+            printf("\nErro ao receber OKUNREG\n");
+        }
+        else
+        {
+            printf("\nRECEBEU OKUNREG IP: %s e TCP: %s\n", no->id.ip, no->id.tcp);
+        }
+
+    }
+    
+    // Liberar recursos
+    freeaddrinfo(res);
+    close(fd);
+    printf("[INFO] Processo de retirada rede concluído com sucesso.\n");
+
+
+
+    return 0;
+
 }
 
 /*
