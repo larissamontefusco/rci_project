@@ -41,6 +41,7 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
         if (strcmp(words[0], "join") == 0 || strcmp(words[0], "j") == 0) {
             printf("network = %s\n", words[1]);
             join(words[1], no, regIP, regUDP, master_set, &max_fd);
+            printf("Opa, to aqui do lado de fora! no->net.net_id = %s",no->net.net_id);
             return 0;
         } 
         else if (strcmp(words[0], "direct") == 0 && strcmp(words[1], "join") == 0) {
@@ -88,7 +89,7 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
             return 0;
         }
         else if (strcmp(words[0], "leave") == 0 || strcmp(words[0], "l") == 0) {
-            leave(no, master_set, &max_fd);
+            leave(no);
             return 0;
         }
         else if (strcmp(words[0], "exit") == 0 || strcmp(words[0], "x") == 0) {
@@ -111,11 +112,19 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
     return 0;
 }
 
+int n_max_obj;
 
 int main(int argc, char** argv) {   
     // Testa se os parametros dados na linha de comando estão correctos
     if (testa_invocacao_programa(argc,argv)) exit(1);
     
+    n_max_obj = atoi(argv[1]); // Converte argv[1] para inteiro
+
+    if (n_max_obj <= 0 || n_max_obj > 1000) { 
+        fprintf(stderr, "Erro: <n_max_obj> deve estar entre 1 e 1000.\n");
+        return 1;
+    }
+
     INFO_NO no;
     inicializar_no(&no);
 
@@ -173,11 +182,7 @@ int main(int argc, char** argv) {
     
     printf("========================================\n");
     
-    // Definindo um timeout para o select
-    struct timeval timeout;
-    timeout.tv_sec = 5;  // Segundos
-    timeout.tv_usec = 0; // Microssegundos
-
+   
 
     while (1) {
         if (finalizar_programa) {
@@ -186,6 +191,11 @@ int main(int argc, char** argv) {
         }
         read_fds = master_fds;
         
+        // Definindo um timeout para o select
+        struct timeval timeout;
+        timeout.tv_sec = 5;  // Segundos
+        timeout.tv_usec = 0; // Microssegundos
+
                 
         counter = select(max_fd + 1, &read_fds, NULL, NULL, &timeout);
         if (counter == -1) {

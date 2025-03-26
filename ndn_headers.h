@@ -11,10 +11,10 @@
 #define tamanho_porto 6
 #define n_max_internos 50
 #define n_max_interfaces (n_max_internos + 1) // É o número de internos + externo
-#define n_max_obj 50
-#define tamanho_max_obj 100
 #define n_max_nos 100
 #define n_max_interests 100
+#define tamanho_max_obj 100
+extern int n_max_obj;
 
 /******************* Estrutura para identificação de um nó *******************/
 /*
@@ -55,23 +55,26 @@ typedef struct {
  *   no_int    - Lista de vizinhos internos (conexões dentro da rede).
  *   cache     - Armazena objetos em cache dentro do nó.
  */
+
+ typedef struct info_net {
+    char net_id[4];                         // Identificador da rede
+    char regIP[20];
+    char regUDP[7];
+} INFO_NET;
+
 typedef struct info_no {
     ID_NO id;                         // Identificador do nó
     ID_NO no_ext;                      // Vizinho externo (conexão direta)
     ID_NO no_salv;                     // Nó de salvaguarda (backup)
     ID_NO no_int[n_max_internos];      // Lista de vizinhos internos
-    char cache[n_max_obj][tamanho_max_obj]; // Cache de objetos armazenados
+    char **cache; // Cache de objetos armazenados
     int num_objetos; // Número de objetos
     INTEREST interests[n_max_interests]; // Tabela de interesses pendentes
     int num_interesses;                // Número atual de interesses ativos // Número de interesses
     INFO_NET net;
 } INFO_NO;
 
-typedef struct info_net {
-    char id;                         // Identificador da rede
-    char regIP;
-    char regUDP;
-} INFO_NET;
+
 
 // Funções para teste de formato:
 int testa_formato_ip(char* ip);
@@ -91,5 +94,5 @@ void inicializar_no(INFO_NO *no);
 bool testa_invocacao_programa(int argc, char** argv);
 void show_names(INFO_NO *no);
 void show_interest_table(INFO_NO *no);
-int leave(INFO_NO *no, fd_set *master_set, int *max_fd);
+int leave(INFO_NO *no);
 int retrieve(char *name, INFO_NO *no);

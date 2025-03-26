@@ -62,8 +62,21 @@ void inicializar_no(INFO_NO *no) {
         no->no_int[i].fd = -1;
     }
 
-    // Limpa chaches
-    memset(no->cache, 0, sizeof(no->cache));
+    // Aloca cache dinamicamente de acordo com n_max_obj
+    no->cache = (char **)malloc(n_max_obj * sizeof(char *));
+    if (no->cache == NULL) {
+        fprintf(stderr, "[ERRO] Falha ao alocar cache.\n");
+        exit(1);
+    }
+
+    for (int i = 0; i < n_max_obj; i++) {
+        no->cache[i] = (char *)malloc(tamanho_max_obj * sizeof(char));
+        if (no->cache[i] == NULL) {
+            fprintf(stderr, "[ERRO] Falha ao alocar memória para cache[%d].\n", i);
+            exit(1);
+        }
+        memset(no->cache[i], 0, tamanho_max_obj);
+    }
 
     no->num_objetos = 0;  // Numeros de objetos inicial é 0
 
@@ -75,9 +88,9 @@ void inicializar_no(INFO_NO *no) {
             no->interests[i].interfaces[j] = -1;
         }
     }
-    no->net.regUDP = '\0';
-    no->net.regIP = '\0';
-    no->net.id = '\0';   
+    no->net.regUDP[0] = '\0';
+    no->net.regIP[0] = '\0';
+    no->net.net_id[0] = '\0';   
     printf("[LOG] ✅ Nó inicializado com sucesso!\n");
 }
 
@@ -537,9 +550,12 @@ void show_interest_table(INFO_NO *no) {
     printf("[SUCESSO] Resposta do servidor recebida: %s\n", buffer);
     
     // Salvando as informações da NET no nó.
-    no->net.id = net;
-    no->net.regIP = regIP;
-    no->net.regUDP = regUDP;
+    strcpy(no->net.net_id, net);
+    printf("\nno->net.net_id = %s\n", no->net.net_id);
+    strcpy(no->net.regIP, regIP);
+    printf("no->net.regIP = %s regIP\n", no->net.regIP);
+    strcpy(no->net.regUDP, regUDP);
+    printf("no->net.regUDP = %s regUDP\n", no->net.regUDP);
 
     // Liberar recursos
     freeaddrinfo(res);
@@ -623,27 +639,32 @@ int direct_join(INFO_NO *no, char *connectIP, char *connectTCP, fd_set *master_s
 }
 
 /* LEAVE*/
-int leave(INFO_NO *no, fd_set *master_set, int *max_fd)
+int leave(INFO_NO *no)
 {
-    printf("[INFO] Iniciando processo de saída na rede %s...\n", no->net.id);
+    printf("[INFO] Iniciando processo de saída na rede %s...\n", no->net.net_id);
     
     struct addrinfo hints, *res;
     int fd, errcode;
     ssize_t n;
     char msg[128]="UNREG ", buffer[128 + 1], str1[20];
-
+    printf("Msg = %s\n", msg);
+    strcpy(msg, (strcat(msg, no->net.net_id)));
+    printf("Msg 1 = %s\n", msg);
     strcpy(msg, (strcat(msg, " ")));
+    printf("Msg 2 = %s\n", msg);
     strcpy(msg, (strcat(msg, no->id.ip)));
+    printf("Msg 3 = %s\n", msg);
     strcpy(msg, (strcat(msg, " ")));
+    printf("Msg 4 = %s\n", msg);
     strcpy(msg, (strcat(msg, no->id.tcp)));
 
-    printf("\n\tMensagem UNREG : %s", msg);
+    printf("\nMensagem UNREG: %s", msg);
     
     // Criar socket UDP
-    printf("[INFO] Criando socket UDP...\n");
+    printf("\n[INFO] Criando socket UDP...\n");
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == -1) {
-        perror("[ERRO] Falha ao criar socket");
+        perror("\n[ERRO] Falha ao criar socket");
         return -1;
     }
 
@@ -653,7 +674,7 @@ int leave(INFO_NO *no, fd_set *master_set, int *max_fd)
     hints.ai_socktype = SOCK_DGRAM; // UDP
 
     // Obter endereço do servidor
-    printf("[INFO] Obtendo endereço do servidor %s:%s...\n", no->net.regIP, no->net.regUDP);
+    printf("\n[INFO] Obtendo endereço do servidor %s:%s...\n", no->net.regIP, no->net.regUDP);
     errcode = getaddrinfo(no->net.regIP, no->net.regUDP, &hints, &res);
     if (errcode != 0) {
         fprintf(stderr, "[ERRO] getaddrinfo: %s\n", gai_strerror(errcode));
@@ -661,32 +682,32 @@ int leave(INFO_NO *no, fd_set *master_set, int *max_fd)
         return -1;
     }
 
-    printf("[INFO] Mensagem a ser enviada: %s\n", msg);
+    printf("\n[INFO] Mensagem a ser enviada: %s\n", msg);
 
     // Enviar mensagem
-    printf("[INFO] Enviando mensagem ao servidor...\n");
+    printf("\n[INFO] Enviando mensagem ao servidor...\n");
     n = sendto(fd, msg, strlen(msg), 0, res->ai_addr, res->ai_addrlen);
     if (n == -1) {
-        perror("[ERRO] Falha ao enviar mensagem");
+        perror("\n[ERRO] Falha ao enviar mensagem");
         freeaddrinfo(res);
         close(fd);
         return -1;
     }
-    printf("[SUCESSO] Mensagem enviada com sucesso.\n");
+    printf("\n[SUCESSO] Mensagem enviada com sucesso.\n");
 
     // Receber resposta
     struct sockaddr addr;
     socklen_t addrlen = sizeof(addr);
-    printf("[INFO] Aguardando resposta do servidor...\n");
+    printf("\n[INFO] Aguardando resposta do servidor...\n");
     n = recvfrom(fd, buffer, 128, 0, &addr, &addrlen);
     if (n == -1) {
-        perror("[ERRO] Falha ao receber resposta do servidor");
+        perror("\n[ERRO] Falha ao receber resposta do servidor");
         freeaddrinfo(res);
         close(fd);
         return -1;
     }
     buffer[n] = '\0';
-    printf("[SUCESSO] Resposta do servidor recebida: %s\n", buffer);
+    printf("\n[SUCESSO] Resposta do servidor recebida: %s\n", buffer);
 
     //COnfirma se recebeu OKUNREG
     if((sscanf(buffer, "%s", str1))==1)
@@ -705,9 +726,7 @@ int leave(INFO_NO *no, fd_set *master_set, int *max_fd)
     // Liberar recursos
     freeaddrinfo(res);
     close(fd);
-    printf("[INFO] Processo de retirada rede concluído com sucesso.\n");
-
-
+    printf("\n[INFO] Processo de retirada rede concluído com sucesso.\n");
 
     return 0;
 
@@ -757,10 +776,10 @@ void parse_buffer(char *buffer, int tamanho_buffer, char words[10][100]) {
  * @return 0 se o objeto for armazenado com sucesso, 1 caso contrário.
  */
 
-int create(char *name, INFO_NO *no) {
+ int create(char *name, INFO_NO *no) {
     if (strlen(name) >= tamanho_max_obj) {
         printf("Erro: Nome muito grande.\n");
-        return 1;
+        return -1;
     }
 
     if (no->num_objetos >= n_max_obj) {
@@ -773,59 +792,62 @@ int create(char *name, INFO_NO *no) {
         if (no->cache[i][0] == '\0') { // Se a posição estiver vazia
             strcpy(no->cache[i], name);
             no->num_objetos++;  // Atualiza o contador
-            printf("[LOG] ✅ Objeto '%s' armazenado na posição %d do cache com sucesso.\n", name, i);
+            printf("[LOG] ✅ Objeto '%s' armazenado na posição %d do cache.\n", name, i);
             return 0;
         }
     }
+
     printf("Erro: Cache cheio.\n");
-    return -1; 
+    return -1;
 }
 
 /**
  * @brief Remove um objeto do cache.
  * 
- * A função busca o objeto no cache e o remove caso ele seja encontrado. Se o objeto não existir, retorna um erro.
+ * A função busca o objeto no cache e o remove caso ele seja encontrado.
+ * Se o objeto não existir, retorna um erro.
  * 
  * @param name Nome do objeto a ser removido.
  * @param no Ponteiro para a estrutura INFO_NO que contém o cache.
- * @return 0 se o objeto for removido com sucesso, 1 caso contrário.
+ * @return 0 se o objeto for removido com sucesso, -1 caso contrário.
  */
-
 int delete(char *name, INFO_NO *no) {
     for (int i = 0; i < n_max_obj; i++) {
         if (strcmp(no->cache[i], name) == 0) { // Encontrou o objeto
-            no->cache[i][0] = '\0'; // Marca como vazio
+            memset(no->cache[i], 0, tamanho_max_obj); // Limpa a memória
             no->num_objetos--; // Atualiza o contador
-            printf("[LOG] ❌ Objeto '%s' removido da posição %d do cache com sucesso.\n", name, i);
+            printf("[LOG] ❌ Objeto '%s' removido da posição %d do cache.\n", name, i);
             return 0;
         }
     }
+
     printf("Erro: Objeto '%s' não encontrado no cache.\n", name);
-    return -1; 
+    return -1;
 }
 
-
 /**
- * @brief Pesquisa de um objeto do cache.
+ * @brief Pesquisa um objeto no cache.
  * 
- * A função busca o objeto no cache e o remove caso ele seja encontrado. Se o objeto não existir, retorna um erro.
+ * A função busca o objeto no cache e retorna a posição caso ele seja encontrado.
+ * Se o objeto não existir, retorna um erro.
  * 
- * @param name Nome do objeto a ser removido.
+ * @param name Nome do objeto a ser pesquisado.
  * @param no Ponteiro para a estrutura INFO_NO que contém o cache.
- * @return 0 se o objeto for removido com sucesso, 1 caso contrário.
+ * @return 0 se o objeto for encontrado, -1 caso contrário.
  */
-
 int retrieve(char *name, INFO_NO *no) {
-    if (no->num_objetos == 0){
-        printf("Não há nenhum objecto associado à este nó.\n");
+    if (no->num_objetos == 0) {
+        printf("Erro: O cache está vazio.\n");
         return -1;
     }
-    for (int i = 0; i < no->num_objetos; i++) {
+
+    for (int i = 0; i < n_max_obj; i++) { // Percorre todo o cache
         if (no->cache[i][0] != '\0' && strcmp(no->cache[i], name) == 0) { // Encontrou o objeto
-            printf("[LOG] Objeto '%s' está na posição %d do cache com sucesso.\n", name, i);
+            printf("[LOG] 🔍 Objeto '%s' encontrado na posição %d do cache.\n", name, i);
             return 0;
         }
     }
+
     printf("Erro: Objeto '%s' não encontrado no cache.\n", name);
     return -1;
 }
@@ -837,9 +859,9 @@ int retrieve(char *name, INFO_NO *no) {
  * 
  * @param no Ponteiro para a estrutura INFO_NO que contém o cache.
  */
-
 void show_names(INFO_NO *no) {
     printf("[LOG] 📜 Objetos armazenados no cache:\n");
+
     int found = 0;
     for (int i = 0; i < n_max_obj; i++) {
         if (no->cache[i][0] != '\0') { // Se a posição não estiver vazia
@@ -847,6 +869,7 @@ void show_names(INFO_NO *no) {
             found = 1;
         }
     }
+
     if (!found) {
         printf("(Nenhum objeto armazenado)\n");
     }
