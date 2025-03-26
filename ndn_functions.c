@@ -60,6 +60,7 @@ void inicializar_no(INFO_NO *no) {
     // Inicializa todos os vizinhos internos como sem conexão
     for (int i = 0; i < n_max_internos; i++) {
         no->no_int[i].fd = -1;
+        printf("\n%d: %d", i, no->no_int[i].fd);
     }
 
     // Aloca cache dinamicamente de acordo com n_max_obj
@@ -193,6 +194,85 @@ void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO* no) {
     printf("🔗 Porta TCP atualizada: %s\n", port);
 
     printf("✅ Atualização concluída com sucesso! 🎉\n\n");
+}
+
+void recebendo_interesse(INFO_NO *no, char *objeto, int origem_interface) {
+    printf("[LOG] 📩 Mensagem de interesse recebida: '%s' pela interface %d\n", objeto, origem_interface);
+
+    // 1️⃣ Se o objeto está no cache, envia diretamente pela interface N
+    for (int i = 0; i < no->num_objetos; i++) {
+        if (strcmp(no->cache[i], objeto) == 0) {
+            printf("[LOG] ✅ Objeto '%s' encontrado no cache. Enviando resposta...\n", objeto);
+            mensagens(no->no_int[origem_interface].fd, OBJECT, objeto, no->no_int[origem_interface].tcp);
+            return;
+        }
+    }
+
+    // Contar o número de interfaces ativas
+    int num_vizinhos = 0;
+    for (int i = 0; i < n_max_internos; i++) {
+        if (no->no_int[i].fd != -1) num_vizinhos++;
+    }
+
+    // 2️⃣ Se não há entrada na tabela de interesses
+    int indice_interesse = -1;
+    for (int i = 0; i < no->num_interesses; i++) {
+        if (strcmp(no->interests[i].name, objeto) == 0) {
+            indice_interesse = i;
+            break;
+        }
+    }
+
+    if (indice_interesse == -1) { // Objeto não está na tabela de interesses
+        if (num_vizinhos == 1) { // Se N for a única interface, responde NOOBJECT
+            printf("[LOG] 🔴 N é a única interface. Enviando NOOBJECT por %d.\n", origem_interface);
+            mensagens(no->no_int[origem_interface].fd, NOOBJECT, objeto, no->no_int[origem_interface].tcp);
+            return;
+        }
+
+        // Criar entrada na tabela de interesses
+        if (no->num_interesses < n_max_interests) {
+            printf("[LOG] ➕ Criando entrada na tabela de interesses para '%s'.\n", objeto);
+            strcpy(no->interests[no->num_interesses].name, objeto);
+            memset(no->interests[no->num_interesses].interfaces, 0, sizeof(no->interests[no->num_interesses].interfaces));
+            no->interests[no->num_interesses].interfaces[origem_interface] = 1;
+            no->num_interesses++;
+
+            // Reencaminhar INTEREST para todas as interfaces, exceto N
+            for (int i = 0; i < n_max_internos; i++) {
+                if (i != origem_interface && no->no_int[i].fd != -1) {
+                    printf("[LOG] 🔀 Reencaminhando INTEREST para interface %d.\n", i);
+                    mensagens(no->no_int[i].fd, INTEREST, objeto, no->no_int[i].tcp);
+                }
+            }
+            return;
+        } else {
+            printf("⚠️ Erro: Tabela de interesses cheia! Não foi possível registrar o pedido.\n");
+            return;
+        }
+    }
+
+    // 3️⃣ Se já existe um interesse pendente
+    printf("[LOG] 🔄 Atualizando estado da interface %d para resposta.\n", origem_interface);
+    no->interests[indice_interesse].interfaces[origem_interface] = 1; // Marca como aguardando resposta
+
+    // Verificar se todas as interfaces estão no estado de resposta
+    int todas_em_resposta = 1;
+    for (int j = 0; j < n_max_internos; j++) {
+        if (no->interests[indice_interesse].interfaces[j] == 0) { // Alguma interface ainda esperando
+            todas_em_resposta = 0;
+            break;
+        }
+    }
+
+    if (todas_em_resposta) {
+        printf("[LOG] ❌ Todas as interfaces em estado de resposta. Enviando NOOBJECT...\n");
+        for (int j = 0; j < n_max_internos; j++) {
+            if (no->interests[indice_interesse].interfaces[j] == 1) {
+                mensagens(no->no_int[j].fd, NOOBJECT, objeto, no->no_int[j].tcp);
+            }
+        }
+    }
 }
 
 
@@ -401,25 +481,46 @@ void show_topology(INFO_NO *no) {
  */
 
 void show_interest_table(INFO_NO *no) {
-    printf("[LOG] 📌 Tabela de Interesses Pendentes:\n");
-    
+    printf("\n===================================\n");
+    printf("📌 Tabela de Interesses Pendentes\n");
+    printf("===================================\n");
+
     if (no->num_interesses == 0) {
         printf("(Nenhum interesse pendente.)\n");
         return;
     }
 
     for (int i = 0; i < no->num_interesses; i++) {
-        printf("- Objeto: %s | Interfaces: ", no->interests[i].name);
+        printf("🔎 Objeto: %s\n", no->interests[i].name);
+        printf("   Interfaces: ");
+
+        int has_interface = 0;  // Flag para saber se existe interface associada
+
         for (int j = 0; j < n_max_interfaces; j++) {
-            if (no->interests[i].interfaces[j] == 1) {
-                printf("[Espera] ");
-            } else if (no->interests[i].interfaces[j] == 2) {
-                printf("[Resposta] ");
-            } else if (no->interests[i].interfaces[j] == 3) {
-                printf("[Fechado] ");
+            if (no->interests[i].interfaces[j] != -1) {
+                has_interface = 1;  // Achamos pelo menos uma interface ativa
+
+                switch (no->interests[i].interfaces[j]) {
+                    case 1:
+                        printf("[Espera: %d] ", j);
+                        break;
+                    case 2:
+                        printf("[Resposta: %d] ", j);
+                        break;
+                    case 3:
+                        printf("[Fechado: %d] ", j);
+                        break;
+                    default:
+                        break;
+                }
             }
         }
-        printf("\n");
+
+        if (!has_interface) {
+            printf("Nenhuma interface ativa.");
+        }
+
+        printf("\n-----------------------------------\n");
     }
 }
 
@@ -836,20 +937,53 @@ int delete(char *name, INFO_NO *no) {
  * @return 0 se o objeto for encontrado, -1 caso contrário.
  */
 int retrieve(char *name, INFO_NO *no) {
-    if (no->num_objetos == 0) {
-        printf("Erro: O cache está vazio.\n");
-        return -1;
-    }
+    printf("[LOG] 🔎 Buscando objeto: '%s'\n", name);
 
-    for (int i = 0; i < n_max_obj; i++) { // Percorre todo o cache
-        if (no->cache[i][0] != '\0' && strcmp(no->cache[i], name) == 0) { // Encontrou o objeto
-            printf("[LOG] 🔍 Objeto '%s' encontrado na posição %d do cache.\n", name, i);
-            return 0;
+    // 1️⃣ Verifica se o objeto já está no cache
+    for (int i = 0; i < no->num_objetos; i++) {
+        if (strcmp(no->cache[i], name) == 0) {
+            printf("[LOG] ✅ Objeto '%s' encontrado no cache!\n", name);
+            return 0;  // Sucesso
         }
     }
 
-    printf("Erro: Objeto '%s' não encontrado no cache.\n", name);
-    return -1;
+    printf("[LOG] ❌ Objeto '%s' não encontrado no cache.\n", name);
+
+    // 2️⃣ Se o objeto não está no cache, verifica se já há um interesse pendente
+    for (int i = 0; i < no->num_interesses; i++) {
+        if (strcmp(no->interests[i].name, name) == 0) {
+            printf("[LOG] ⏳ Já há um pedido pendente para '%s'. Aguardando resposta...\n", name);
+            return -1;
+        }
+    }
+
+    // 3️⃣ Adiciona na tabela de interesses
+    if (no->num_interesses < n_max_interests) {
+        strcpy(no->interests[no->num_interesses].name, name);
+        memset(no->interests[no->num_interesses].interfaces, 0, sizeof(no->interests[no->num_interesses].interfaces));
+        no->num_interesses++;
+
+        printf("[LOG] ➕ Pedido de interesse para '%s' adicionado à tabela.\n", name);
+
+        // 4️⃣ Envia INTEREST para os vizinhos
+        for (int i = 0; i < n_max_internos; i++) {
+            printf("\n%d: %d", i, no->no_int[i].fd);
+            if (no->no_int[i].fd > 0) {
+                printf("[LOG] 📤 Enviando INTEREST para interface %d.\n", i);
+                mensagens(no->no_int[i].fd, INTEREST, name, no->no_int[i].tcp);
+            }
+        }
+
+        if (no->no_ext.fd > 0) {
+            printf("[LOG] 📤 Enviando INTEREST para o vizinho externo.\n");
+            mensagens(no->no_ext.fd, INTEREST, name, no->no_ext.tcp);
+        }
+
+        return -1; // Objeto não encontrado, mas interesse foi enviado
+    } else {
+        printf("⚠️ Erro: Tabela de interesses cheia! Não foi possível registrar o pedido.\n");
+        return -1;
+    }
 }
 
 /**

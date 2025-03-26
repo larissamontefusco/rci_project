@@ -85,6 +85,7 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
             return 0;
         }
         else if (strcmp(words[0], "si") == 0) {
+            show_interest_table(no);
             printf("show interest table\n");
             return 0;
         }
@@ -104,6 +105,25 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
             recebendo_safe(no, fd, words[1],words[2]);
             return 0;
         }
+        else if(strcmp("INTEREST", words[0]) == 0){
+            int origem_interface = -1;
+        
+            // Encontrar a interface correspondente ao `fd`
+            for (int i = 0; i < n_max_internos; i++) {
+                if (no->no_int[i].fd == fd) {
+                    origem_interface = i;
+                    break;
+                }
+            }
+        
+            if (origem_interface == -1) {
+                printf("⚠️ Erro: Interface de origem não encontrada para fd=%d\n", fd);
+                return 0;
+            }
+        
+            recebendo_interesse(no, words[1], origem_interface);
+            return 0;
+        }        
         else{
             printf("Comando não encontrado ❌. Tente novamente.\n");
             return 0;
