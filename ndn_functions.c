@@ -276,7 +276,12 @@ void recebendo_interesse(INFO_NO *no, char *objeto, int origem_interface) {
 
 
 void recebendo_objeto(INFO_NO *no, char *objeto, int origem_interface) {
-    printf("[LOG] 📦 Mensagem de objeto recebida: '%s' pela interface %d\n", objeto, origem_interface);
+    if (!no) {
+        printf("[ERROR] Ponteiro 'no' é NULL! Abortando.\n");
+        return;
+    }
+
+    printf("[LOG] \U0001F4E6 Mensagem de objeto recebida: '%s' pela interface %d\n", objeto, origem_interface);
 
     int indice_interesse = -1;
 
@@ -293,37 +298,46 @@ void recebendo_objeto(INFO_NO *no, char *objeto, int origem_interface) {
         return;
     }
 
-    // Reencaminha a mensagem para todas as interfaces no estado de resposta
-    printf("[LOG] 🔀 Reencaminhando objeto '%s' para as interfaces que aguardavam resposta.\n", objeto);
+    // Reencaminha a mensagem para todas as interfaces que aguardavam resposta
+    printf("[LOG] \U0001F500 Reencaminhando objeto '%s' para as interfaces que aguardavam resposta.\n", objeto);
     for (int i = 0; i < n_max_internos; i++) {
         if (no->interests[indice_interesse].interfaces[i] == 1) {
+            if (i >= n_max_internos) {  // Proteção contra acesso inválido
+                printf("[ERROR] Índice %d fora do limite de interfaces!\n", i);
+                continue;
+            }
+            printf("[DEBUG] Enviando para fd=%d, i=%d\n", no->no_int[i].fd, i);
             mensagens(no->no_int[i].fd, OBJECT, objeto, no->no_int[i].tcp);
         }
     }
 
-    // Remove a entrada da tabela de interesses pendentes
+    // Remove a entrada da tabela de interesses pendentes de forma segura
     printf("[LOG] 🗑️ Removendo '%s' da tabela de interesses pendentes.\n", objeto);
-    no->num_interesses--;
-    for (int i = indice_interesse; i < no->num_interesses; i++) {
-        no->interests[i] = no->interests[i + 1];
+    if (indice_interesse < no->num_interesses - 1) {
+        memmove(&no->interests[indice_interesse], &no->interests[indice_interesse + 1],
+                (no->num_interesses - indice_interesse - 1) * sizeof(INTEREST));
     }
+    memset(&no->interests[no->num_interesses - 1], 0, sizeof(INTEREST)); // Limpar último elemento
+    no->num_interesses--;
 
-    // Adiciona ao cache (com política FIFO ou LRU se necessário)
+    // Adiciona ao cache (com política FIFO se necessário)
     if (no->num_objetos < n_max_obj) {
-        strcpy(no->cache[no->num_objetos], objeto);
+        strncpy(no->cache[no->num_objetos], objeto, tamanho_max_obj - 1);
+        no->cache[no->num_objetos][tamanho_max_obj - 1] = '\0';
         no->num_objetos++;
     } else {
         printf("[LOG] ⚠️ Cache cheio! Aplicando política de substituição (FIFO)...\n");
-        // Remove o objeto mais antigo e adiciona o novo
+        free(no->cache[0]);
         for (int i = 1; i < n_max_obj; i++) {
-            strcpy(no->cache[i - 1], no->cache[i]);
+            no->cache[i - 1] = no->cache[i];
         }
-        strcpy(no->cache[n_max_obj - 1], objeto);
+        no->cache[n_max_obj - 1] = malloc(tamanho_max_obj * sizeof(char));
+        strncpy(no->cache[n_max_obj - 1], objeto, tamanho_max_obj - 1);
+        no->cache[n_max_obj - 1][tamanho_max_obj - 1] = '\0';
     }
 
     printf("[LOG] ✅ Objeto '%s' armazenado no cache.\n", objeto);
 }
-
 
 void recebendo_noobjeto(INFO_NO *no, char *objeto, int origem_interface) {
     printf("[LOG] 🚫 Mensagem de ausência recebida para '%s' pela interface %d\n", objeto, origem_interface);
