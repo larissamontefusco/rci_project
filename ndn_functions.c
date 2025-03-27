@@ -1118,8 +1118,9 @@ int retrieve(char *name, INFO_NO *no) {
 
     // 3️⃣ Adiciona na tabela de interesses
     if (no->num_interesses < n_max_interests) {
-        strcpy(no->interests[no->num_interesses].name, name);
-        memset(no->interests[no->num_interesses].interfaces, 0, sizeof(no->interests[no->num_interesses].interfaces));
+        strncpy(no->interests[no->num_interesses].name, name, tamanho_max_obj - 1);
+        no->interests[no->num_interesses].name[tamanho_max_obj - 1] = '\0';  // Garante terminação correta
+
         no->num_interesses++;
 
         printf("[LOG] ➕ Pedido de interesse para '%s' adicionado à tabela.\n", name);
