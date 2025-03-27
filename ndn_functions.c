@@ -60,7 +60,6 @@ void inicializar_no(INFO_NO *no) {
     // Inicializa todos os vizinhos internos como sem conexão
     for (int i = 0; i < n_max_internos; i++) {
         no->no_int[i].fd = -1;
-        printf("\n%d: %d", i, no->no_int[i].fd);
     }
 
     // Aloca cache dinamicamente de acordo com n_max_obj
@@ -649,11 +648,11 @@ void show_interest_table(INFO_NO *no) {
     ID_NO no_a_ligar;
     int fd, errcode;
     ssize_t n;
-    char msg[128]="NODES ", msg_2[128]="REG ", buffer[128 + 1];
-    char str1[9] ="", str2[3] ="", str3[tamanho_ip]="", str4[tamanho_porto]="";
+    char msg[128] = "NODES ", msg_2[128] = "REG ", buffer[128 + 1];
+    char str1[9] = "", str2[3] = "", str3[tamanho_ip] = "", str4[tamanho_porto] = "";
     
     // Concatena o nome da rede na mensagem de solicitação de nós
-    strcpy(msg, (strcat(msg, net)));
+    strcpy(msg, strcat(msg, net));
     
     // Criar socket UDP
     printf("[INFO] Criando socket UDP...\n");
@@ -690,10 +689,35 @@ void show_interest_table(INFO_NO *no) {
     }
     printf("[SUCESSO] Mensagem enviada com sucesso.\n");
 
-    // Receber resposta do servidor
+    // Receber resposta do servidor (primeira recvfrom)
     struct sockaddr addr;
     socklen_t addrlen = sizeof(addr);
     printf("[INFO] Aguardando resposta do servidor...\n");
+
+    // Timeout para o primeiro recvfrom
+    {
+        fd_set read_fds;
+        FD_ZERO(&read_fds);
+        FD_SET(fd, &read_fds);
+
+        struct timeval timeout;
+        timeout.tv_sec = 5;  // Timeout de 5 segundos
+        timeout.tv_usec = 0; 
+
+        int counter = select(fd + 1, &read_fds, NULL, NULL, &timeout);
+        if (counter == -1) {
+            perror("[ERRO] Falha na chamada select()");
+            freeaddrinfo(res);
+            close(fd);
+            return -1;
+        } else if (counter == 0) {
+            printf("[ERRO] Timeout atingido! Nenhuma resposta recebida.\n");
+            freeaddrinfo(res);
+            close(fd);
+            return -1;
+        }
+    }
+
     n = recvfrom(fd, buffer, 128, 0, &addr, &addrlen);
     if (n == -1) {
         perror("[ERRO] Falha ao receber resposta do servidor");
@@ -703,16 +727,14 @@ void show_interest_table(INFO_NO *no) {
     }
     buffer[n] = '\0';
     printf("[SUCESSO] Resposta do servidor recebida: %s\n", buffer);
-    
+
     // Lê o primeiro nó da rede, se houver, e tenta se conectar a ele
-    if((sscanf(buffer, "%s %s %s %s", str1, str2, str3, str4)) == 4)
-    {
+    if ((sscanf(buffer, "%s %s %s %s", str1, str2, str3, str4)) == 4) {
         strcpy(no_a_ligar.ip, str3);
         strcpy(no_a_ligar.tcp, str4); 
 
         // Liga-se ao nó escolhido
-        if(direct_join(no, no_a_ligar.ip, no_a_ligar.tcp, master_set, max_fd))
-        {
+        if (direct_join(no, no_a_ligar.ip, no_a_ligar.tcp, master_set, max_fd)) {
             printf("Correu mal o direct join!");
             freeaddrinfo(res);
             close(fd);
@@ -721,11 +743,11 @@ void show_interest_table(INFO_NO *no) {
     }
     
     // Compõe a mensagem de registro ao servidor
-    strcpy(msg_2, (strcat(msg_2, net)));
-    strcpy(msg_2, (strcat(msg_2, " ")));
-    strcpy(msg_2, (strcat(msg_2, no->id.ip)));
-    strcpy(msg_2, (strcat(msg_2, " ")));
-    strcpy(msg_2, (strcat(msg_2, no->id.tcp)));
+    strcpy(msg_2, strcat(msg_2, net));
+    strcpy(msg_2, strcat(msg_2, " "));
+    strcpy(msg_2, strcat(msg_2, no->id.ip));
+    strcpy(msg_2, strcat(msg_2, " "));
+    strcpy(msg_2, strcat(msg_2, no->id.tcp));
     printf("[INFO] Mensagem 2 a ser enviada: %s\n\n", msg_2);
 
     // Enviar mensagem de registro ao servidor
@@ -737,9 +759,32 @@ void show_interest_table(INFO_NO *no) {
         return -1;
     }
     printf("[SUCESSO] Mensagem enviada com sucesso.\n");
-
-    // Aguardar resposta de confirmação do servidor
+    
+    // Aguardar resposta de confirmação do servidor (segunda recvfrom)
     printf("[INFO] Aguardando resposta do servidor...\n");
+    {
+        fd_set read_fds;
+        FD_ZERO(&read_fds);
+        FD_SET(fd, &read_fds);
+
+        struct timeval timeout;
+        timeout.tv_sec = 5;  // Timeout de 5 segundos
+        timeout.tv_usec = 0; 
+
+        int counter = select(fd + 1, &read_fds, NULL, NULL, &timeout);
+        if (counter == -1) {
+            perror("[ERRO] Falha na chamada select()");
+            freeaddrinfo(res);
+            close(fd);
+            return -1;
+        } else if (counter == 0) {
+            printf("[ERRO] Timeout atingido! Nenhuma resposta recebida.\n");
+            freeaddrinfo(res);
+            close(fd);
+            return -1;
+        }
+    }
+
     n = recvfrom(fd, buffer, 128, 0, &addr, &addrlen);
     if (n == -1) {
         perror("[ERRO] Falha ao receber resposta do servidor");
@@ -1067,7 +1112,6 @@ int retrieve(char *name, INFO_NO *no) {
 
         // 4️⃣ Envia INTEREST para os vizinhos
         for (int i = 0; i < n_max_internos; i++) {
-            printf("\n%d: %d", i, no->no_int[i].fd);
             if (no->no_int[i].fd > 0) {
                 printf("[LOG] 📤 Enviando INTEREST para interface %d.\n", i);
                 mensagens(no->no_int[i].fd, INTEREST, name, no->no_int[i].tcp);

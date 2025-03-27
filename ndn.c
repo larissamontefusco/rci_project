@@ -246,16 +246,13 @@ int main(int argc, char** argv) {
         }
         read_fds = master_fds;
         
-        // Definindo um timeout para o select
-        struct timeval timeout;
-        timeout.tv_sec = 5;  // Segundos
-        timeout.tv_usec = 0; // Microssegundos
-
-                
-        counter = select(max_fd + 1, &read_fds, NULL, NULL, &timeout);
+        counter = select(max_fd + 1, &read_fds, NULL, NULL, NULL);
         if (counter == -1) {
             perror("select");
             exit(1);
+        }
+        if (counter == 0) {
+            printf("O temporizador expirou");
         }
 
         for (int i = 0; i <= max_fd; i++) {
