@@ -86,7 +86,6 @@ int processa_comandos(int fd, char *buffer, int tamanho_buffer, INFO_NO *no) {
         }
         else if (strcmp(words[0], "si") == 0) {
             show_interest_table(no);
-            printf("show interest table\n");
             return 0;
         }
         else if (strcmp(words[0], "leave") == 0 || strcmp(words[0], "l") == 0) {
