@@ -347,7 +347,7 @@ void recebendo_noobjeto(INFO_NO *no, char *objeto, int origem_interface) {
             break;
         }
     }
-    
+
     // Marca a interface como fechada
     printf("[LOG] 🔒 Fechando interface %d para '%s'.\n", origem_interface, objeto);
     no->interests[indice_interesse].interfaces[origem_interface] = 0;
@@ -1134,9 +1134,6 @@ int retrieve(char *name, INFO_NO *no) {
 
     // 3️⃣ Adiciona na tabela de interesses
     if (no->num_interesses < n_max_interests) {
-        strncpy(no->interests[no->num_interesses].name, name, tamanho_max_obj - 1);
-        no->interests[no->num_interesses].name[tamanho_max_obj - 1] = '\0';  // Garante terminação correta
-
         
         int counter_internos = 0;
         // 4️⃣ Envia INTEREST para os vizinhos
@@ -1151,6 +1148,9 @@ int retrieve(char *name, INFO_NO *no) {
             printf("[LOG] Este nó não está ligado a nada e não possui o objecto. Logo, não adiciono nada a tabela de interesse. \n");
             return -1;
         }
+        strncpy(no->interests[no->num_interesses].name, name, tamanho_max_obj - 1);
+        no->interests[no->num_interesses].name[tamanho_max_obj - 1] = '\0';  // Garante terminação correta
+
         printf("[DEBUG] 📌 Interesse adicionado na posição %d: '%s'\n", no->num_interesses, no->interests[no->num_interesses - 1].name);
         printf("[LOG] ➕ Pedido de interesse para '%s' adicionado à tabela.\n", name);
 
