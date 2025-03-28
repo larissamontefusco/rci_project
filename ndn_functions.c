@@ -88,6 +88,7 @@ void inicializar_no(INFO_NO *no) {
             no->interests[i].interfaces[j] = -1;
         }
     }
+    no->num_interesses = 0;
     no->net.regUDP[0] = '\0';
     no->net.regIP[0] = '\0';
     no->net.net_id[0] = '\0';   
@@ -1121,18 +1122,24 @@ int retrieve(char *name, INFO_NO *no) {
         strncpy(no->interests[no->num_interesses].name, name, tamanho_max_obj - 1);
         no->interests[no->num_interesses].name[tamanho_max_obj - 1] = '\0';  // Garante terminação correta
 
-        no->num_interesses++;
-
-        printf("[LOG] ➕ Pedido de interesse para '%s' adicionado à tabela.\n", name);
-
+        
+        int counter_internos = 0;
         // 4️⃣ Envia INTEREST para os vizinhos
         for (int i = 0; i < n_max_internos; i++) {
             if (no->no_int[i].fd > 0) {
                 printf("[LOG] 📤 Enviando INTEREST para interface %d.\n", i);
                 mensagens(no->no_int[i].fd, INTEREST, name, no->no_int[i].tcp);
+                counter_internos++;
             }
         }
+        if (counter_internos == 0 && no->no_ext.fd == -1 && no->no_salv.fd == -1){
+            printf("[LOG] Este nó não está ligado a nada e não possui o objecto. Logo, não adiciono nada a tabela de interesse. \n");
+            return -1;
+        }
+        printf("[DEBUG] 📌 Interesse adicionado na posição %d: '%s'\n", no->num_interesses, no->interests[no->num_interesses - 1].name);
+        printf("[LOG] ➕ Pedido de interesse para '%s' adicionado à tabela.\n", name);
 
+        no->num_interesses++;
         if (no->no_ext.fd > 0) {
             printf("[LOG] 📤 Enviando INTEREST para o vizinho externo.\n");
             mensagens(no->no_ext.fd, INTEREST, name, no->no_ext.tcp);
@@ -1140,7 +1147,7 @@ int retrieve(char *name, INFO_NO *no) {
 
         return -1; // Objeto não encontrado, mas interesse foi enviado
     } else {
-        printf("⚠️ Erro: Tabela de interesses cheia! Não foi possível registrar o pedido.\n");
+        printf("[ERRO] ⚠️: Tabela de interesses cheia! Não foi possível registrar o pedido.\n");
         return -1;
     }
 }
