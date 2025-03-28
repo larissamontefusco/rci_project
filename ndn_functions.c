@@ -959,6 +959,31 @@ int leave(INFO_NO *no)
     // Receber resposta
     struct sockaddr addr;
     socklen_t addrlen = sizeof(addr);
+
+    // Timeout para o primeiro recvfrom
+    {
+        fd_set read_fds;
+        FD_ZERO(&read_fds);
+        FD_SET(fd, &read_fds);
+
+        struct timeval timeout;
+        timeout.tv_sec = 5;  // Timeout de 5 segundos
+        timeout.tv_usec = 0; 
+
+        int counter = select(fd + 1, &read_fds, NULL, NULL, &timeout);
+        if (counter == -1) {
+            perror("[ERRO] Falha na chamada select()");
+            freeaddrinfo(res);
+            close(fd);
+            return -1;
+        } else if (counter == 0) {
+            printf("[ERRO] Timeout atingido! Nenhuma resposta recebida.\n");
+            freeaddrinfo(res);
+            close(fd);
+            return -1;
+        }
+    }
+
     printf("\n[INFO] Aguardando resposta do servidor...\n");
     n = recvfrom(fd, buffer, 128, 0, &addr, &addrlen);
     if (n == -1) {
