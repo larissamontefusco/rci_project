@@ -196,6 +196,16 @@ void atualiza_viz_externo(int fd, char* ip, char* port, INFO_NO* no) {
     printf("✅ Atualização concluída com sucesso! 🎉\n\n");
 }
 
+
+/**
+ * @brief Envia mensagem de INTERESSE.
+ * 
+ * @param no Estrutura do nó a ser atualizada.
+ * @param objeto Objeto de interesse.
+ * @param origem_interface Origem do interesse.
+ * 
+ */
+
 void recebendo_interesse(INFO_NO *no, char *objeto, int origem_interface) {
     printf("[LOG] 📩 Mensagem de interesse recebida: '%s' pela interface %d\n", objeto, origem_interface);
 
@@ -276,6 +286,15 @@ void recebendo_interesse(INFO_NO *no, char *objeto, int origem_interface) {
 }
 
 
+/**
+ * @brief Envia mensagem de OBJETO - Para indicar que o objeto foi encontrado.
+ * 
+ * @param no Estrutura do nó a ser atualizada.
+ * @param objeto Objeto de interesse.
+ * @param origem_interface Origem do interesse.
+ * 
+ */
+
 void recebendo_objeto(INFO_NO *no, char *objeto, int origem_interface) {
     if (!no) {
         printf("[ERROR] Ponteiro 'no' é NULL! Abortando.\n");
@@ -334,6 +353,16 @@ void recebendo_objeto(INFO_NO *no, char *objeto, int origem_interface) {
 
     printf("[LOG] ✅ Objeto '%s' armazenado no cache.\n", objeto);
 }
+
+/**
+ * @brief Envia mensagem de NOOBJETO - Para indicar que o objeto não foi encontrado.
+ * 
+ * @param no Estrutura do nó a ser atualizada.
+ * @param objeto Objeto de interesse.
+ * @param origem_interface Origem do interesse.
+ * 
+ */
+
 
 void recebendo_noobjeto(INFO_NO *no, char *objeto, int origem_interface) {
     printf("[LOG] 🚫 Mensagem de ausência recebida para '%s' pela interface %d\n", objeto, origem_interface);

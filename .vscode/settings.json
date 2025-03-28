@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "ndn_headers.h": "c",
+        "ctype.h": "c",
+        "netdb.h": "c",
+        "types.h": "c",
+        "socket.h": "c",
+        "string.h": "c",
+        "typeinfo": "c",
+        "stdio.h": "c",
+        "inet.h": "c",
+        "stdbool.h": "c"
+    }
+}
