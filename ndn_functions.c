@@ -294,11 +294,6 @@ void recebendo_objeto(INFO_NO *no, char *objeto, int origem_interface) {
         }
     }
 
-    if (indice_interesse == -1) {
-        printf("[LOG] ❌ Objeto '%s' não estava na tabela de interesses. Ignorando mensagem.\n", objeto);
-        return;
-    }
-
     // Reencaminha a mensagem para todas as interfaces que aguardavam resposta
     printf("[LOG] \U0001F500 Reencaminhando objeto '%s' para as interfaces que aguardavam resposta.\n", objeto);
     for (int i = 0; i < n_max_internos; i++) {
@@ -352,12 +347,7 @@ void recebendo_noobjeto(INFO_NO *no, char *objeto, int origem_interface) {
             break;
         }
     }
-
-    if (indice_interesse == -1) {
-        printf("[LOG] ❌ Objeto '%s' não estava na tabela de interesses. Ignorando mensagem.\n", objeto);
-        return;
-    }
-
+    
     // Marca a interface como fechada
     printf("[LOG] 🔒 Fechando interface %d para '%s'.\n", origem_interface, objeto);
     no->interests[indice_interesse].interfaces[origem_interface] = 0;
