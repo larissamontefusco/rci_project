@@ -18,6 +18,13 @@
 #define OBJECT 3
 #define NOOBJECT 4
 
+/**
+ * @brief Testa se o programa foi invocado correctamente.
+ * 
+ * @param argc: número de argumentos.
+ * @param argv: argumentos.
+ */
+
 bool testa_invocacao_programa(int argc, char** argv)
 {
     if (argc != 4 && argc != 6) 
@@ -46,6 +53,11 @@ bool testa_invocacao_programa(int argc, char** argv)
 return false;
 }
 
+/**
+ * @brief Inicializa o nó de forma correcta.
+ * 
+ * @param no Nó a ser inicializado.
+ */
 
 void inicializar_no(INFO_NO *no) {
     // Inicializa o nó principal como sem conexão
@@ -362,7 +374,6 @@ void recebendo_objeto(INFO_NO *no, char *objeto, int origem_interface) {
  * @param origem_interface Origem do interesse.
  * 
  */
-
 
 void recebendo_noobjeto(INFO_NO *no, char *objeto, int origem_interface) {
     printf("[LOG] 🚫 Mensagem de ausência recebida para '%s' pela interface %d\n", objeto, origem_interface);

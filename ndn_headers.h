@@ -16,6 +16,35 @@
 #define tamanho_max_obj 100
 extern int n_max_obj;
 
+
+/****************** Estrutura para armazenar interesses pendentes ******************/
+/*
+    INTEREST - Estrutura que contém as informações sobre os interesses
+    Campos:
+    name - Identificação dos objetos de interesse
+    interfaces - Armazena as interfaces que tem comunicação com o nó
+*/
+typedef struct {
+    char name[tamanho_max_obj];  
+    int interfaces[n_max_interfaces]; 
+} INTEREST;
+
+/****************** Estrutura para armazenar informações da NET ******************/
+/*
+    INFO_NET - Estrutura que contém as informações sobre os interesses
+    Campos:
+    net_id - Identificação da rede (000 - 999)
+    regIP - Endereço IP UDP
+    regUDP - Porta UDP
+*/
+
+ typedef struct info_net {
+    char net_id[4];                         // Identificador da rede
+    char regIP[20];
+    char regUDP[7];
+} INFO_NET;
+
+
 /******************* Estrutura para identificação de um nó *******************/
 /*
  * ID_NO - Estrutura que armazena as informações básicas de um nó na rede.
@@ -32,18 +61,6 @@ typedef struct no {
 } ID_NO;
 
 
-/****************** Estrutura para armazenar interesses pendentes ******************/
-/*
-    INTEREST - Estrutura que contém as informações sobre os interesses
-    Campos:
-    name - Identificação dos objetos de interesse
-    interfaces - Armazena as interfaces que tem comunicação com o nó
-*/
-typedef struct {
-    char name[tamanho_max_obj];  
-    int interfaces[n_max_interfaces]; 
-} INTEREST;
-
 /****************** Estrutura para armazenar informações de um nó ******************/
 /*
  * INFO_NO - Estrutura que contém as informações completas de um nó na rede.
@@ -55,12 +72,6 @@ typedef struct {
  *   no_int    - Lista de vizinhos internos (conexões dentro da rede).
  *   cache     - Armazena objetos em cache dentro do nó.
  */
-
- typedef struct info_net {
-    char net_id[4];                         // Identificador da rede
-    char regIP[20];
-    char regUDP[7];
-} INFO_NET;
 
 typedef struct info_no {
     ID_NO id;                         // Identificador do nó
